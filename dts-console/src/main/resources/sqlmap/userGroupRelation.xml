@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="UserGroupRelation">
+
+    <typeAlias alias="userGroupRelation" type="com.le.dts.common.domain.store.UserGroupRelation" />
+
+    <resultMap id="userGroupRelationResultMap" class="userGroupRelation">
+        <result property="id" column="id"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+        <result property="groupId" column="group_id" />
+        <result property="userId" column="user_id" />
+    </resultMap>
+
+    <sql id="userGroupRelationColumns">
+        id,
+        gmt_create,
+        gmt_modified,
+        group_id,
+        user_id
+    </sql>
+
+    <insert id="insert">
+        insert
+        into
+        dts_user_group_relation(
+            gmt_create,
+            gmt_modified,
+            group_id,
+            user_id
+        ) values (
+            NOW(),
+            NOW(),
+            #groupId#,
+            #userId#
+        )
+        <selectKey resultClass="long" keyProperty="id">
+            <![CDATA[SELECT LAST_INSERT_ID() AS ID ]]>
+        </selectKey>
+    </insert>
+
+    <select id="queryByUserId" resultMap="userGroupRelationResultMap">
+        select
+        <include refid="userGroupRelationColumns" />
+        from
+        dts_user_group_relation
+        where
+        user_id = #userId#
+    </select>
+    
+    <select id="queryByGroupId" resultMap="userGroupRelationResultMap">
+        select 
+        	<include refid="userGroupRelationColumns" /> 
+        from 
+        	dts_user_group_relation 
+        where 
+        	group_id = #groupId#
+    </select>
+
+    <update id="update">
+        update
+            dts_user_group_relation
+        set
+            gmt_modified = now(),
+            user_id = #userId#
+        where
+            id = #id#
+    </update>
+
+    <delete id="delete">
+        delete 
+        from 
+            dts_user_group_relation 
+        where 
+            id = #id#
+    </delete>
+
+</sqlMap>

@@ -1,0 +1,3 @@
+<jboss-web>
+  <context-root>/dts-console</context-root> 
+</jboss-web>

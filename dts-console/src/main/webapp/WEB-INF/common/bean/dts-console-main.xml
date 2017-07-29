@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:jee="http://www.springframework.org/schema/jee"
+       xmlns:lang="http://www.springframework.org/schema/lang"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.5.xsd
+       http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-2.5.xsd
+       http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-2.5.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+       " default-autowire="byName">
+       
+     <bean id="consoleConfig" class="com.le.dts.console.config.ConsoleConfig">
+     	
+        <property name="zkHostsAutoChange">
+            <value>true</value>
+        </property>
+        <!--<property name="zkHosts">-->
+            <!--<value>127.0.0.1:2181,127.0.0.1:3181,127.0.0.1:4181</value>-->
+        <!--</property>-->
+     
+     	<property name="driverClassName4Meta" value="com.mysql.jdbc.Driver"/>
+        <property name="url4Meta" value="jdbc:mysql://10.11.147.93:3306/DTS_SERVER_META_APP"/>
+        <property name="username4Meta" value="order_t_w"/>
+        <property name="password4Meta" value="NTk3NjIyYmJmNDY"/>
+
+         <property name="dynamicDBCount" value="2"/>
+         <property name="dynamicTableCount" value="4"/>
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url">
+            <list>
+                <value>jdbc:mysql://10.11.147.93:3306/DTS_SERVER_APP</value>
+                <value>jdbc:mysql://10.11.147.93:3306/DTS_SERVER_APP_1</value>
+            </list>
+        </property>
+        <property name="username">
+            <list>
+                <value>order_t_w</value>
+                <value>order_t_w</value>
+            </list>
+        </property>
+        <property name="password">
+            <list>
+                <value>NTk3NjIyYmJmNDY</value>
+                <value>NTk3NjIyYmJmNDY</value>
+            </list>
+        </property>
+     </bean>
+
+    <bean id="dataSource" class="com.le.dts.console.store.mysql.access.DataSource" init-method="init">
+    	<property name="useTddl" value="true"/>
+    </bean>
+
+	<bean id="sqlMapClients" class="com.le.dts.console.store.mysql.access.SqlMapClients" init-method="init">
+		<property name="useTddl" value="true"/>
+	</bean>
+
+    <bean id="taskSnapshotAccess" class="com.le.dts.console.store.mysql.TaskSnapshotAccess4MysqlFactory" >
+        <property name="dbCount" value="2"/>
+        <property name="tableCount" value="4"/>
+    </bean>
+	<bean id="clientGroupAccess" class="com.le.dts.console.store.mysql.ClientGroupAccess4Mysql" />
+	<bean id="jobAccess" class="com.le.dts.console.store.mysql.JobAccess4Mysql" />
+	<bean id="jobInstanceSnapshotAccess" class="com.le.dts.console.store.mysql.JobInstanceSnapshotAccess4Mysql" />
+	<bean id="clusterAccess" class="com.le.dts.console.store.mysql.ClusterAccess4Mysql" />
+    <bean id="serverGroupAccess" class="com.le.dts.console.store.mysql.ServerGroupAccess4Mysql"/>
+	<bean id="warningSetupAccess" class="com.le.dts.console.store.mysql.WarningSetupAccess4Mysql" />
+	<bean id="jobServerRelationAccess" class="com.le.dts.console.store.mysql.JobServerRelationAccess4Mysql" />
+    <bean id="userGroupRelationAccess" class="com.le.dts.console.store.mysql.UserGroupRelationAccess4Mysql"/>
+    <bean id="jobRelationAccess" class="com.le.dts.console.store.mysql.JobRelationAccess4Mysql"/>
+    <bean id="jobOperationAccess" class="com.le.dts.console.store.mysql.JobOperationAccess4Mysql"/>
+    <bean id="designatedMachineAccess" class="com.le.dts.console.store.mysql.DesignatedMachineAccess4Mysql"/>
+    <bean id="flowInstanceAccess" class="com.le.dts.console.store.mysql.FlowInstanceAccess4Mysql"/>
+    <bean id="serverJobInstanceMappingAccess" class="com.le.dts.console.store.mysql.ServerJobInstanceMappingAccess4Mysql"/>
+    <bean id="registerUserAccess" class="com.le.dts.console.store.mysql.RegisterUserAccess4Mysql"/>
+	
+	<bean id="store" class="com.le.dts.console.store.Store" />
+	<bean id="zookeeper" class="com.le.dts.console.zookeeper.Zookeeper" init-method="init"/>
+
+	<bean id="jobManager" class="com.le.dts.console.manager.JobManager" />
+	<bean id="clientGroupManager" class="com.le.dts.console.manager.ClientGroupManager" />
+    <bean id="serverGroupManager" class="com.le.dts.console.manager.ServerGroupManager"/>
+	<bean id="clusterManager" class="com.le.dts.console.manager.ClusterManager" />
+	<bean id="jobInstanceManager" class="com.le.dts.console.manager.JobInstanceManager" />
+	<bean id="warningSetupManager" class="com.le.dts.console.manager.WarningSetupManager" />
+	<bean id="taskSnapShotManager" class="com.le.dts.console.manager.TaskSnapShotManager" />
+    <bean id="userGroupRelationManager" class="com.le.dts.console.manager.UserGroupRelationManager"/>
+    <bean id="jobRelationManager" class="com.le.dts.console.manager.JobRelationManager"/>
+    <bean id="jobOperationManager" class="com.le.dts.console.manager.JobOperationManager"/>
+    <bean id="designatedMachineManager" class="com.le.dts.console.manager.DesignatedMachineManager"/>
+	
+	<bean id="consoleRemoting" class="com.le.dts.console.remoting.ConsoleRemoting" init-method="init"/>
+	
+	<bean id="apiService" class="com.le.dts.console.api.impl.ApiServiceImpl"/>
+	<bean id="dtsConsole" class="com.le.dts.console.DtsConsole" init-method="init"/>
+
+	<bean id="springFactory" class="com.le.dts.console.login.filter.SpringBeanContext"/>
+
+    <bean id="garbageCleanup" class="com.le.dts.console.gc.GarbageCleanup" init-method="init"/>
+    <bean id="jobInstanceSnapshotCleanup" class="com.le.dts.console.gc.JobInstanceSnapshotCleanup" init-method="init"/>
+    <bean id="jobInstanceMappingCleanup" class="com.le.dts.console.gc.JobInstanceMappingCleanup" init-method="init"/>
+
+    <bean id="envData" class="com.le.dts.console.config.EnvData">
+        <property name="envName" value="daily" />
+        <property name="zkNameSpace" value="zk-dts-root" />
+        <property name="flowDomainName" value="http://aliworkpmc.alibaba.net/" />
+        <property name="authKey" value="1$dts-console$hello1234" />
+        <property name="timerMsgDomainName" value="http://ops.jm.taobao.net/" />
+    </bean>
+    
+    <bean id="httpRequestService" class="com.le.dts.console.service.HttpRequestService"/>
+
+</beans>

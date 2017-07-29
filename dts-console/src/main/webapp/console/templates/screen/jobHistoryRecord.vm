@@ -1,0 +1,326 @@
+<input type="hidden" name="userId" value="$userId" />
+<input type="hidden" name="outerUser" value="$outerUser" />
+<input type="hidden" name="clusterId" value="$clusterId" />
+<div class="navbar navbar-default navbar-fixed-top" role="navigation" style="background:#FFFFFF">
+	<div class="container-fluid">
+		<div class="row">
+			<div class="navbar-header">
+				<a class="navbar-brand" href="#" style='color:#FF9933;font-weight:500'>&nbsp;&nbsp;分布式定时服务DTS</a>
+			</div>
+			<div class="navbar-collapse collapse">
+				<ul class="nav navbar-nav">
+					<li >
+						<a href="jobManager.htm" style='color:#000000;weight:600'>Job配置</a>
+					</li>
+					<li class="active">
+						<a href="jobControl.htm" style="color:#FFFFFF;background:#555555">Job管控</a>
+					</li>
+					#if($!showAuth)
+					<li >
+						<a href="jobAuth.htm" style='color:#000000;weight:600'>权限控制</a>
+					</li>
+					#end
+					#if($!showAdvertisement)
+					<li >
+						<a href="$!{timerMsgDomainName}tmq-console/" target="_blank" style='color:#000000;weight:600'>TMQ</a>
+					</li>
+					<li >
+						<a href="http://gitlab.alibaba-inc.com/middleware-dts/tmq-wiki/wikis/home" target="_blank" style='color:#000000;weight:600'>定时消息wiki</a>
+					</li>
+					#end
+				</ul>
+				<div class="pull-right" style="padding-right:50px">
+					<table >
+						<tr height="50">
+							<td >
+								<span style="color:#000000">欢迎&nbsp;$!userName</span>
+                            </td>
+                        </tr>
+                    </table>
+    			</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="container-fluid">
+	<div class="col-sm-3 col-md-2">
+		<div class="list-group">
+			<a href="jobControl.htm?clusterId=$!clusterId" class="list-group-item">状态监管</a>
+			<a href="jobHistoryRecord.htm?clusterId=$!clusterId" class="list-group-item active" style="background:#555555">历史记录</a>
+		</div>
+	</div>
+	<div class="col-sm-9 col-md-10">
+		<div class="row">
+			<h4 class="header">历史记录</h4>
+		</div>
+		<div class="row">
+			<div>
+				#foreach($cluster in $userServerCluster.entrySet())
+					#if($!cluster.getValue().getId() == $!clusterId)
+                        <button id="reginId_all_btn" type="button" class="btn btn-info" onclick="showGroupCluster('$!cluster.getValue().getId()')">
+							$!cluster.getValue().getDescription()
+                        </button>
+					#else
+                        <button id="reginId_all_btn" type="button" class="btn btn-default" onclick="showGroupCluster('$!cluster.getValue().getId()')">
+							$!cluster.getValue().getDescription()
+                        </button>
+					#end
+				#end
+			</div>
+		</div>
+		<hr />
+		<div>
+			<table class="table table-bordered">
+				#foreach($group in $userGroups)
+					<tr>
+						<td>
+							<table class="table table-bordered">
+								<tr>
+									<td>
+										分组ID:$group.getSystemDefineGroupId()
+									</td>
+									<td>
+										分组描述:$group.getGroupDesc()
+									</td>
+									<td>
+										Job数:$group.getGroupJobNum()
+									</td>
+								</tr>
+								<tr>
+									<td colspan="3">
+										<button id="viewJobStatus_$group.getSystemDefineGroupId()" type="button" class="btn btn-default pull-right" onclick="showJobStatus('$group.getSystemDefineGroupId()')">
+										查看Job列表
+										</button>
+									</td>
+								</tr>
+							</table>
+							<div id="group_$group.getSystemDefineGroupId()" style="display:none;">
+							</div>
+						</td>
+					</tr>
+				#end
+			</table>
+		</div>
+	</div>
+</div>
+
+<div id="history-modal" class="modal fade" role="dialog">
+	<div class="modal-dialog">
+        <div class="modal-content">
+    		<div class="modal-header">
+    			<a class="close" data-dismiss="modal">×</a>
+    			<h4 class="modal-title">历史记录</h4>
+            </div>
+            <div class="modal-body">
+				<div id="records">
+				</div>
+          	</div>
+            <div class="modal-footer">
+            </div>
+        </div>
+	</div>
+</div>
+
+<script language="javascript">
+	function showGroupCluster(clusterId){
+		var path = "jobHistoryRecord.htm?clusterId=" + clusterId;
+		location.href = path;
+	}
+	function showJobStatus(groupId){
+		if($("#group_" + groupId).is(':hidden') == true){
+
+			var pageCount = 0;
+			var path = "jobManager.do?action=JobManageAction&event_submit_do_get_group_jobs_count=1";
+			jQuery.ajax({
+				url: path,
+				type: "POST",
+				dataType:'json',
+				data:{'groupId': groupId, 'clusterId':$("#clusterId").val()}
+				,
+				success:function(json){
+					if(json.success == true){
+						pageCount = json.pageCount;
+						var jt = "";
+						jt += "<div><table id='table_" + groupId + "' class='table'><tr><td>Job ID</td><td>Job描述</td><td>操作</td></tr>";
+						jt += "</table>";
+						jt += "<div id='jobPagination_" + groupId + "' class='easyui-pagination'></div></div>";
+						$("#group_" + groupId).html(jt);
+						// 绑定分页
+						$("#jobPagination_" + groupId).pagination({
+							total:pageCount,
+							pageSize:10,
+							pageList:[5,10,20],
+							displayMsg:"",
+							beforePageText:"页",
+							afterPageText:"共{pages}",
+							onSelectPage:function(pageNumber, pageSize){groupPagesCallback(groupId, pageNumber, pageSize);},
+                            onRefresh:function(pageNumber, pageSize){groupPagesCallback(groupId, pageNumber, pageSize);},
+						});
+						initGroupData(groupId, 1, 10);
+						
+					}else{
+                        $.toast({
+                            text : "获取失败!" + json.errMsg,
+                            position : 'top-right',
+                            bgColor : 'red',
+                            textColor : '#eee',
+                            hideAfter : false,
+                        });
+					}
+				}
+				,
+				error:function(xhr, status, error){
+                    $.toast({
+                        text : "获取失败, 请重试!",
+                        position : 'top-right',
+                        bgColor : 'red',
+                        textColor : '#eee',
+                    });
+				}
+			});
+
+            $("#viewJobStatus_" + groupId).html("收起Job列表");
+		}else{
+			$("#group_" + groupId).hide();
+            $("#viewJobStatus_" + groupId).html("查看Job列表");
+		}
+	}
+	
+	function groupPagesCallback(groupId, pageNumber, pageSize){
+		initGroupData(groupId, pageNumber, pageSize);
+	}
+	
+	function initGroupData(groupId, pageId, pageSize){
+		// 请求数据，刷新job表格;
+		var path = "jobManager.do?action=JobManageAction&event_submit_do_get_group_jobs=1";
+		jQuery.ajax({
+			url: path,
+			type: "POST",
+			dataType:'json',
+			data:{'groupId': groupId, 'page':pageId, 'clusterId':$("#clusterId").val(), 'pageSize':pageSize}
+			,
+			success:function(json){
+				jobsArray = json.groupJobs;
+				$("#table_" + groupId + " tr:gt(0)").remove();
+				var tbody = "";
+				for(i = 0; i < jobsArray.length; i++){
+					jobJson = jobsArray[i];
+					var trs = "";
+					trs += "<tr>";
+                    trs += "<td>" + jobJson.jobId + "</td>";
+					trs += "<td>" + jobJson.jobDesc + "</td>";
+					trs += "<td><a  onclick='viewJobHistory("
+					+ jobJson.jobId +")' >查看历史记录</a>&nbsp;&nbsp;</td></tr>";
+					tbody += trs;
+				}
+				$("#table_" + groupId).append(tbody);
+                $("#group_" + groupId).show();
+			}
+			,
+			error:function(xhr, status, error){
+                $.toast({
+                    text : "获取失败, 请重试!",
+                    position : 'top-right',
+                    bgColor : 'red',
+                    textColor : '#eee',
+                });
+			}
+		}
+		);
+	}
+	
+	function viewJobHistory(jobId){
+		var pageCount = 0;
+		var path = "jobHistoryRecord.do?action=JobHistoryRecordAction&event_submit_do_get_job_history_count=1";
+		jQuery.ajax({
+			url: path,
+			type: "POST",
+			dataType:'json',
+			data:{'jobId': jobId, 'clusterId':$("#clusterId").val()}
+			,
+			success:function(json){
+				if(json.success == true){
+					var ht = "";
+            		ht += "<div>";
+            		ht +="<input id='page' type='hidden' value='1' />";
+            		ht += "<table id='historyTable_" + jobId + "' class='table table-bordered'>";
+            		ht += "<thead><tr><td align='center' width='30%'>时间</td><td width='70%'>记录</td></tr></thead>";
+            		ht += "</table>";
+            		ht += "<div id='historyPagination_" + jobId + "' class='easyui-pagination pull-right'></div></div>";
+            		$("#records").html(ht);
+					pageCount = json.pageCount;
+            		// 绑定分页;
+					$("#historyPagination_" + jobId).pagination({
+						total:pageCount,
+						pageSize:10,
+						pageList:[5,10,20],
+						displayMsg:"",
+						onSelectPage:function(pageNumber, pageSize){historyPagesCallback(jobId, pageNumber, pageSize);},
+                        onRefresh:function(pageNumber, pageSize){historyPagesCallback(jobId, pageNumber, pageSize);},
+					});
+					$("#history-modal").modal();
+					initHistoryData(jobId, 1, 10);
+				}
+				else{
+                    $.toast({
+                        text : "获取失败!" + json.errMsg,
+                        position : 'top-right',
+                        bgColor : 'red',
+                        textColor : '#eee',
+                        hideAfter : false,
+                    });
+				}
+			}
+			,
+			error:function(xhr, status, error){
+                $.toast({
+                    text : "获取失败, 请重试!",
+                    position : 'top-right',
+                    bgColor : 'red',
+                    textColor : '#eee',
+                });
+			}
+		});
+	}
+	
+	function historyPagesCallback(jobId, pageNumber, pageSize){
+		initHistoryData(jobId, pageNumber, pageSize);
+	}
+	
+	function initHistoryData(jobId,pageId,pageSize){
+		var path = "jobHistoryRecord.do?action=JobHistoryRecordAction&event_submit_do_get_job_history=1";
+		jQuery.ajax({
+			url: path,
+			type: "POST",
+			dataType:'json',
+			data:{'jobId': jobId, 'page':pageId, 'clusterId':$("#clusterId").val(), 'pageSize':pageSize}
+			,
+			success:function(json){
+				$("#historyTable_" + jobId + " tr:gt(0)").remove();
+				// json记录数组
+				var record = json.record;
+				var records = record.split("#");
+				var tbody = "";
+				for(i = 0; i < records.length - 1; i++){
+					record = records[i].split("@");
+					var trs = "";
+					trs += "<tr><td align='center' width='30%'>" + record[0] + "</td><td width='70%'>" +
+					record[1] + "</td></tr>";
+					tbody += trs;
+				}
+				$("#historyTable_" + jobId).append(tbody);
+			}
+			,
+			error:function(xhr, status, error){
+                $.toast({
+                    text : "获取失败, 请重试!",
+                    position : 'top-right',
+                    bgColor : 'red',
+                    textColor : '#eee',
+                });
+			}
+		}
+		);
+	}
+	
+</script>

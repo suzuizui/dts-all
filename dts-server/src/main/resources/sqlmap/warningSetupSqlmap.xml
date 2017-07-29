@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="WarningSetup">
+	
+	<typeAlias alias="warningSetup" type="com.le.dts.common.domain.store.WarningSetup" />
+	
+	<resultMap id="warningSetupResultMap" class="warningSetup">
+		<result property="id" column="id"/>
+		<result property="gmtCreate" column="gmt_create"/>
+		<result property="gmtModified" column="gmt_modified"/>
+		<result property="clientGroupId" column="client_group_id"/>
+		<result property="jobId" column="job_id"/>
+		<result property="contact" column="contact"/>
+		<result property="warningSetup" column="warning_setup"/>
+	</resultMap>
+	
+	<sql id="warningSetupColumns">
+		id, 
+		gmt_create, 
+		gmt_modified, 
+		client_group_id, 
+		job_id, 
+		contact,
+		warning_setup
+    </sql>
+	
+	<insert id="insert">
+		insert 
+			into 
+		ods_warning_setup(
+			gmt_create, 
+			gmt_modified, 
+			client_group_id, 
+			job_id, 
+			contact,
+			warning_setup
+		) values (
+			NOW(), 
+			NOW(), 
+			#clientGroupId#, 
+			#jobId#, 
+			#contact#,
+			#warningSetup#
+		)
+		<selectKey resultClass="long" keyProperty="id">    
+			<![CDATA[SELECT LAST_INSERT_ID() AS ID ]]>  
+		</selectKey>    
+	</insert>
+	
+	<select id="query" resultMap="warningSetupResultMap">
+		select 
+			<include refid="warningSetupColumns" /> 
+		from 
+			dts_warning_setup 
+		where 
+			client_group_id = #clientGroupId# 
+	</select>
+	
+	<select id="queryByJobId" resultMap="warningSetupResultMap">
+		select 
+			<include refid="warningSetupColumns" /> 
+		from 
+			dts_warning_setup 
+		where 
+			job_id = #jobId#
+	</select>
+	
+	<update id="update">
+		update 
+			dts_warning_setup 
+		set 
+			gmt_modified = now(),
+			contact = #contact#,
+			warning_setup = #warningSetup#
+		where 
+			id = #id#
+	</update>
+	
+	<delete id="delete">
+		delete 
+		from 
+			dts_warning_setup 
+		where 
+			id = #id#
+	</delete>
+	
+</sqlMap>

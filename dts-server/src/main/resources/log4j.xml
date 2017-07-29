@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="GBK" ?>
+<!DOCTYPE log4j:configuration SYSTEM "org/apache/log4j/xml/log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+	<!--<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+		<param name="Threshold" value="info"></param>
+		<param name="encoding" value="UTF-8"/>
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[%d{yyyy-MM-dd HH:mm:ss\} %-5p] [%t] {%c:%L}-%m%n"></param>
+		</layout>
+	</appender>-->
+
+	<appender name="PROJECT" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="file" value="/letv/logs/dts-server-${ServerPort}/dts.log" />
+		<param name="append" value="true" />
+		<param name="encoding" value="UTF-8" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d [%X{remoteAddr}] %-5p %c{2} - %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="timerExecutorAppender" class="org.apache.log4j.DailyRollingFileAppender">
+	  <param name="file" value="/letv/logs/dts-server-${ServerPort}/timerExecutor.log"/>
+	  <param name="append" value="true"/>
+	  <param name="encoding" value="UTF-8"/>
+	  <layout class="org.apache.log4j.PatternLayout">
+	      <param name="ConversionPattern" value="%d - %m%n"/>
+	  </layout>
+	</appender>
+	
+	<appender name="serverRemotingAppender" class="org.apache.log4j.DailyRollingFileAppender">
+	  <param name="file" value="/letv/logs/dts-server-${ServerPort}/serverRemoting.log"/>
+	  <param name="append" value="true"/>
+	  <param name="encoding" value="UTF-8"/>
+	  <layout class="org.apache.log4j.PatternLayout">
+	      <param name="ConversionPattern" value="%d - %m%n"/>
+	  </layout>
+	</appender>
+	
+	<appender name="serverServiceImplAppender" class="org.apache.log4j.DailyRollingFileAppender">
+	  <param name="file" value="/letv/logs/dts-server-${ServerPort}/serverServiceImpl.log"/>
+	  <param name="append" value="true"/>
+	  <param name="encoding" value="UTF-8"/>
+	  <layout class="org.apache.log4j.PatternLayout">
+	      <param name="ConversionPattern" value="%d - %m%n"/>
+	  </layout>
+	</appender>
+	
+	<appender name="compensationAppender" class="org.apache.log4j.DailyRollingFileAppender">
+	  <param name="file" value="/letv/logs/dts-server-${ServerPort}/compensation.log"/>
+	  <param name="append" value="true"/>
+	  <param name="encoding" value="UTF-8"/>
+	  <layout class="org.apache.log4j.PatternLayout">
+	      <param name="ConversionPattern" value="%d - %m%n"/>
+	  </layout>
+	</appender>
+	
+	<appender name="livingTaskManagerAppender" class="org.apache.log4j.DailyRollingFileAppender">
+	  <param name="file" value="/letv/logs/dts-server-${ServerPort}/livingTaskManager.log"/>
+	  <param name="append" value="true"/>
+	  <param name="encoding" value="UTF-8"/>
+	  <layout class="org.apache.log4j.PatternLayout">
+	      <param name="ConversionPattern" value="%d - %m%n"/>
+	  </layout>
+	</appender>
+	
+	<appender name="jobPoolAppender" class="org.apache.log4j.DailyRollingFileAppender">
+	  <param name="file" value="/letv/logs/dts-server-${ServerPort}/jobPool.log"/>
+	  <param name="append" value="true"/>
+	  <param name="encoding" value="UTF-8"/>
+	  <layout class="org.apache.log4j.PatternLayout">
+	      <param name="ConversionPattern" value="%d - %m%n"/>
+	  </layout>
+	</appender>
+	
+	<appender name="methodCountTimerAppender" class="org.apache.log4j.DailyRollingFileAppender">
+	  <param name="file" value="/letv/logs/dts-server-${ServerPort}/methodCountTimer.log"/>
+	  <param name="append" value="true"/>
+	  <param name="encoding" value="UTF-8"/>
+	  <layout class="org.apache.log4j.PatternLayout">
+	      <param name="ConversionPattern" value="%d - %m%n"/>
+	  </layout>
+	</appender>
+	
+	<appender name="countTaskSnapshotAppender" class="org.apache.log4j.DailyRollingFileAppender">
+	  <param name="file" value="/letv/logs/dts-server-${ServerPort}/countTaskSnapshot.log"/>
+	  <param name="append" value="true"/>
+	  <param name="encoding" value="UTF-8"/>
+	  <layout class="org.apache.log4j.PatternLayout">
+	      <param name="ConversionPattern" value="%d|%m%n"/>
+	  </layout>
+	</appender>
+	
+	<logger name="timerExecutor" additivity="false">
+	    <level value="INFO"/>
+	    <appender-ref ref="timerExecutorAppender"/>
+	</logger>
+	
+	<logger name="serverRemoting" additivity="false">
+	    <level value="INFO"/>
+	    <appender-ref ref="serverRemotingAppender"/>
+	</logger>
+	
+	<logger name="serverServiceImpl" additivity="false">
+	    <level value="INFO"/>
+	    <appender-ref ref="serverServiceImplAppender"/>
+	</logger>
+	
+	<logger name="compensation" additivity="false">
+	    <level value="INFO"/>
+	    <appender-ref ref="compensationAppender"/>
+	</logger>
+	
+	<logger name="livingTaskManager" additivity="false">
+	    <level value="INFO"/>
+	    <appender-ref ref="livingTaskManagerAppender"/>
+	</logger>
+	
+	<logger name="jobPool" additivity="false">
+	    <level value="INFO"/>
+	    <appender-ref ref="jobPoolAppender"/>
+	</logger>
+	
+	<logger name="methodCountTimer" additivity="false">
+	    <level value="INFO"/>
+	    <appender-ref ref="methodCountTimerAppender"/>
+	</logger>
+	
+	<logger name="countTaskSnapshot" additivity="false">
+	    <level value="INFO"/>
+	    <appender-ref ref="countTaskSnapshotAppender"/>
+	</logger>
+	
+	<root>
+		<level value="INFO" />
+		<appender-ref ref="PROJECT" />
+		<!--<appender-ref ref="CONSOLE" />-->
+	</root>
+</log4j:configuration>

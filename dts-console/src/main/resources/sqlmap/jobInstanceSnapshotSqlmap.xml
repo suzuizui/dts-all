@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="JobInstanceSnapshot">
+	
+	<typeAlias alias="jobInstanceSnapshot" type="com.le.dts.common.domain.store.JobInstanceSnapshot" />
+	<typeAlias alias="jobHistoryPageQuery" type="com.le.dts.console.page.JobHistoryPageQuery" />
+	
+	<resultMap id="jobInstanceSnapshotResultMap" class="jobInstanceSnapshot">
+		<result property="id" column="id"/>
+		<result property="gmtCreate" column="gmt_create"/>
+		<result property="gmtModified" column="gmt_modified"/>
+		<result property="jobId" column="job_id"/>
+		<result property="fireTime" column="fire_time"/>
+		<result property="status" column="status"/>
+		<result property="description" column="description"/>
+		<result property="jobInstanceResult" column="job_instance_result"/>
+		<result property="instanceGlobal" column="instance_global"/>
+		<result property="offset" column="offset"/>
+		<result property="lockVersion" column="lock_version"/>
+		<result property="retryCount" column="retry_count"/>
+		<result property="nextRetryTime" column="next_retry_time"/>
+        <result property="relationTag" column="relation_tag" />
+        <result property="resultVersion" column="result_version" />
+	</resultMap>
+	
+	<sql id="jobInstanceSnapshotColumns">
+		id, 
+		gmt_create, 
+		gmt_modified, 
+		job_id, 
+		fire_time,
+		status,
+		description,
+		job_instance_result,
+		instance_global,
+        offset,
+        lock_version,
+        retry_count,
+        next_retry_time,
+        relation_tag,
+        result_version
+    </sql>
+	
+	<insert id="insert">
+		insert 
+			into 
+		dts_job_instance_snapshot(
+			gmt_create, 
+			gmt_modified, 
+			job_id, 
+			fire_time,
+			status,
+			description,
+			job_instance_result,
+			instance_global,
+			offset,
+			lock_version,
+			retry_count,
+        	next_retry_time,
+            relation_tag,
+            result_version
+		) values (
+			NOW(), 
+			NOW(), 
+			#serverClusterId#, 
+			#serverGroupId#, 
+			#clientClusterId#, 
+			#jobGroupId#, 
+			#jobId#, 
+			#instanceId#,
+			#fireTime#,
+			#status#,
+			#description#,
+			#jobInstanceResult#,
+			#instanceGlobal#,
+			#offset#,
+			#lockVersion#,
+			#retryCount#,
+			#nextRetryTime#,
+            #relationTag#,
+            #resultVersion#
+		)
+		<selectKey resultClass="long" keyProperty="id">    
+			<![CDATA[SELECT LAST_INSERT_ID() AS ID ]]>  
+		</selectKey>    
+	</insert>
+	
+	<select id="pageQuery" resultMap="jobInstanceSnapshotResultMap">
+		select 
+			<include refid="jobInstanceSnapshotColumns" /> 
+		from 
+			dts_job_instance_snapshot force index(j) 
+		where 
+			job_id = #jobId#
+		order by id desc
+		LIMIT #startRow#,#pageSize#
+	</select>
+	
+	<select id="query" resultMap="jobInstanceSnapshotResultMap">
+		select 
+			<include refid="jobInstanceSnapshotColumns" /> 
+		from 
+			dts_job_instance_snapshot 
+		where 
+			id = #id#
+	</select>
+
+	<select id="findByJobIdAndFireTime" resultMap="jobInstanceSnapshotResultMap">
+		select 
+			<include refid="jobInstanceSnapshotColumns" /> 
+		from 
+			dts_job_instance_snapshot force index(uniqueinstance) 
+		where 
+			job_id = #jobId# and 
+            fire_time = #fireTime#
+	</select>
+	
+	<select id="queryWorking" resultMap="jobInstanceSnapshotResultMap" parameterClass="jobInstanceSnapshot">
+		select 
+			<include refid="jobInstanceSnapshotColumns" /> 
+		from 
+			dts_job_instance_snapshot force index(j_s) 
+		where 
+			job_id = #jobId# and 
+			(
+			status = 1 or 
+			status = 2
+			)
+	</select>
+	
+	<select id="queryAllJobIdList" resultClass="java.lang.Long">
+		SELECT 
+			distinct job_id 
+		from 
+			dts_job_instance_snapshot
+	</select>
+	
+	<select id="queryInstanceIdList4DeleteByJobId" resultClass="java.lang.Long">
+		select 
+			id 
+		from 
+			dts_job_instance_snapshot force index(j_s) 
+		where 
+			job_id = #jobId# and 
+			status = 9 
+		order by 
+			gmt_create desc 
+		limit 100 , 100
+	</select>
+	
+	<select id="queryInstanceIdList4DeleteAllInstanceByJobId" resultClass="java.lang.Long">
+		select 
+			id 
+		from 
+			dts_job_instance_snapshot force index(j_s) 
+		where 
+			job_id = #jobId# 
+		limit 100
+	</select>
+	
+	<select id="queryInstanceGlobal" resultMap="jobInstanceSnapshotResultMap">
+		select 
+			<include refid="jobInstanceSnapshotColumns" /> 
+		from 
+			dts_job_instance_snapshot 
+		where 
+			id = #id#
+	</select>
+	
+	<select id="queryInstance4Stop" resultMap="jobInstanceSnapshotResultMap">
+		select 
+			<include refid="jobInstanceSnapshotColumns" /> 
+		from 
+			dts_job_instance_snapshot 
+		where 
+			(status = 0 or status = 1 or status = 2) and 
+			<![CDATA[gmt_create < #gmtCreate#]]>  
+		limit 100
+	</select>
+	
+	<select id="historyCount" resultClass="java.lang.Integer">
+		SELECT count(*)
+		from 
+			dts_job_instance_snapshot force index(j) 
+		where 
+			job_id = #jobId#
+	</select>
+	
+	<select id="queryDeleteCount" resultClass="long">
+		SELECT 
+			count(1) 
+		from 
+			dts_job_instance_snapshot force index(status) 
+		where 
+			status in 
+            <iterate property="statusList" conjunction="," close=")" open="(">  
+                #statusList[]#  
+            </iterate>
+	</select>
+	
+	<select id="queryAllInstanceList" resultMap="jobInstanceSnapshotResultMap">
+		SELECT 
+			<include refid="jobInstanceSnapshotColumns" /> 
+		from 
+			dts_job_instance_snapshot force index(status) 
+		where 
+			status in 
+            <iterate property="statusList" conjunction="," close=")" open="(">  
+                #statusList[]#  
+            </iterate> 
+            and id > #offset# 
+        ORDER BY id ASC 
+		limit 1000
+	</select>
+
+    <select id="queryRuningInstanceList" resultMap="jobInstanceSnapshotResultMap">
+        SELECT
+            <include refid="jobInstanceSnapshotColumns" />
+        from
+            dts_job_instance_snapshot force index(status) 
+        where
+            status in
+            <iterate property="statusList" conjunction="," close=")" open="(">
+                #statusList[]#
+            </iterate>
+            and
+            id%#bulkAmout#=#bulkId#
+            ORDER BY id ASC
+            limit #offset#, #length#
+    </select>
+
+    <select id="queryLastInstance" resultMap="jobInstanceSnapshotResultMap">
+        SELECT
+            <include refid="jobInstanceSnapshotColumns" />
+        from
+            dts_job_instance_snapshot force index(j) 
+        where 
+            job_id = #jobId#
+        order by id DESC
+        limit 1
+    </select>
+
+    
+	<update id="update">
+		update 
+			dts_job_instance_snapshot 
+		set 
+			gmt_modified = now(),
+			description = #description#,
+			status = #status#,
+			job_instance_result = #jobInstanceResult#,
+			instance_global = #instanceGlobal#
+		where 
+			id = #id#
+	</update>
+	
+	<update id="updateInstanceGlobal">
+		update 
+			dts_job_instance_snapshot 
+		set 
+			gmt_modified = now(),
+			instance_global = #instanceGlobal#
+		where 
+			id = #id#
+	</update>
+	
+	<update id="updateInstanceStatus">
+		update 
+			dts_job_instance_snapshot 
+		set 
+			gmt_modified = now(),
+			status = #status# 
+		where 
+			id = #id#
+	</update>
+	
+	<update id="updateInstanceStatus4JobId">
+		update 
+			dts_job_instance_snapshot force index(j) 
+		set 
+			gmt_modified = now(),
+			status = #status#
+		where 
+			job_id = #jobId#
+	</update>
+	
+	<update id="updateInstanceNext">
+		update 
+			dts_job_instance_snapshot 
+		set 
+			gmt_modified = now(),
+			status = #status#,
+			retry_count = retry_count + 1,
+			next_retry_time = #nextRetryTime# 
+		where 
+			id = #id#
+	</update>
+	
+	<update id="updateJobInstanceResult">
+		update 
+			dts_job_instance_snapshot 
+		set 
+			gmt_modified = now(),
+			job_instance_result = #jobInstanceResult#
+		where 
+			id = #id#
+	</update>
+	
+	<delete id="delete">
+		delete 
+		from 
+			dts_job_instance_snapshot 
+		where 
+			id = #id#
+	</delete>
+	
+	<delete id="deleteInstanceByIdList">
+		delete 
+		from 
+			dts_job_instance_snapshot 
+		where 
+			id in 
+            <iterate property="idList" conjunction="," close=")" open="(">  
+                #idList[]# 
+            </iterate>
+	</delete>
+	
+</sqlMap>

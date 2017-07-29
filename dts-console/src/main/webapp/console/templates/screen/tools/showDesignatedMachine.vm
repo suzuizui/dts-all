@@ -1,0 +1,18 @@
+<table border="1">
+#foreach($remoteMachine in $remoteMachineList)
+	<tr>
+		<td>
+			$!remoteMachine.remoteAddress
+        </td>
+		<td>
+			$!remoteMachine.remoteVersion
+        </td>
+		<td>
+			$!remoteMachine.clientId
+        </td>
+		<td>
+			$!remoteMachine.crashRetry
+        </td>
+    </tr>
+#end
+</table>

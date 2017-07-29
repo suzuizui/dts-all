@@ -1,0 +1,595 @@
+<input type="hidden" id="outerUser" value="$outerUser" />
+<input type="hidden" id="clusterId" value="$clusterId" />
+<div class="navbar navbar-default navbar-fixed-top" role="navigation" style="background:#FFFFFF">
+	<div class="container-fluid">
+		<div class="row">
+			<div class="navbar-header">
+				<a class="navbar-brand" href="#" style='color:#FF9933;font-weight:500'>&nbsp;&nbsp;分布式定时服务DTS</a>
+			</div>
+			<div class="navbar-collapse collapse">
+				<ul class="nav navbar-nav">
+					<li >
+						<a href="jobManager.htm" style='color:#000000;weight:600'>Job配置</a>
+					</li>
+					<li >
+						<a href="jobControl.htm" style='color:#000000;weight:600'>Job管控</a>
+					</li>
+					<li class="active">
+						<a href="jobMonitor.htm" style="color:#FFFFFF;background:#555555">监控报警</a>
+					</li>
+					#if($!showAuth)
+					<li >
+						<a href="jobAuth.htm" style='color:#000000;weight:600'>权限控制</a>
+					</li>
+					#end
+					#if($!showAdvertisement)
+					<li >
+						<a href="$!{timerMsgDomainName}tmq-console/" target="_blank" style='color:#000000;weight:600'>TMQ</a>
+					</li>
+					<li >
+						<a href="http://gitlab.alibaba-inc.com/middleware-dts/tmq-wiki/wikis/home" target="_blank" style='color:#000000;weight:600'>定时消息wiki</a>
+					</li>
+					#end
+				</ul>
+				<div class="pull-right" style="padding-right:50px">
+					<table >
+						<tr height="50">
+							<td >
+								<span style="color:#000000">欢迎&nbsp;$!userName</span>
+                            </td>
+                        </tr>
+                    </table>
+    			</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="container-fluid">
+	<div class="col-sm-3 col-md-2">
+		<div class="list-group">
+			<a href="jobMonitor.htm?clusterId=$!clusterId" class="list-group-item active" style="background:#555555">监控设置</a>
+		</div>
+	</div>
+	<div class="col-sm-9 col-md-10">
+		<div class="row">
+			<h4 class="header">监控设置</h4>
+		</div>
+		<div class="row">
+			<div>
+				#foreach($cluster in $userServerCluster.entrySet())
+					#if($!cluster.getValue().getId() == $!clusterId)
+                        <button type="button" class="btn btn-info" onclick="showGroupCluster('$!cluster.getValue().getId()')">
+							$!cluster.getValue().getDescription()
+                        </button>
+					#else
+                        <button type="button" class="btn btn-default" onclick="showGroupCluster('$!cluster.getValue().getId()')">
+							$!cluster.getValue().getDescription()
+                        </button>
+					#end
+				#end
+			</div>
+		</div>
+		<hr />
+		<div>
+			<table class="table table-bordered">
+				#foreach($group in $userGroups)
+					<tr>
+						<td>
+							<table class="table  table-bordered">
+								<tr>
+									<td>
+										分组ID:$group.getSystemDefineGroupId()
+									</td>
+									<td>
+										分组描述:$group.getGroupDesc()
+									</td>
+									<td>
+										Job数:$group.getGroupJobNum()
+									</td>
+								</tr>
+								<tr>
+									<td colspan="3">
+										<button id="viewJobStatus" type="button" class="btn btn-default pull-left" onclick="showJobStatus('$group.getSystemDefineGroupId()')">
+										设置分组内Job监控
+										</button>
+									</td>
+								</tr>
+							</table>
+							<div id="group_$group.getSystemDefineGroupId()"  style="display:none;">
+							</div>
+						</td>
+					</tr>
+				#end
+			</table>
+		</div>
+	</div>
+</div>
+<div id="monitor-dialog" title="报警设置" style="display:none;" >
+	
+</div>
+
+<div id="monitor-modal" class="modal fade" role="dialog">
+	<div class="modal-dialog">
+        <div class="modal-content">
+    		<div class="modal-header">
+    			<a class="close" data-dismiss="modal">×</a>
+    			<h4 class="modal-title">监控配置</h4>
+            </div>
+            <div class="modal-body">
+				<input id="monitorGroup" type="hidden" />
+				<input id="monitorJob" type="hidden" />
+    			<table width="100%">
+					<tr>
+						<td >
+							<table >
+								<tr style="font-size:14">
+									<td align="right">Job连续超过 </td>
+									<td width="5"> </td>
+                            		<td width="20">
+            							<select id="notFireTimes">
+            								<option value="1">1</option>
+            								<option value="2">2</option>
+            								<option value="3">3</option>
+            								<option value="4">4</option>
+            								<option value="5">5</option>
+											<option value="6">6</option>
+            								<option value="7">7</option>
+            								<option value="8">8</option>
+            								<option value="9">9</option>
+            								<option value="10">10</option>
+											<option value="20">20</option>
+											<option value="30">30</option>
+											<option value="40">40</option>
+											<option value="50">50</option>
+											<option value="60">60</option>
+											<option value="70">70</option>
+											<option value="80">80</option>
+											<option value="90">90</option>
+											<option value="100">100</option>
+                                        </select>
+            						</td>
+									<td width="5"> </td>
+            						<td align="left">
+            							次没有准点触发执行发出报警
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                		
+                	</tr>
+					<tr height="10">
+						<td >
+							<hr />
+                        </td>
+                    </tr>
+                	<tr>
+						<td >
+							<table >
+								<tr style="font-size:14">
+                            		<td align="right">正在执行的Job，执行时间超过</td>
+									<td width="5"> </td>
+                            		<td><input id="timeoutLimit" type="text" style="text-align:right;font-size:14" size="10"></input></td>
+									<td width="5"> </td>
+									<td align="left">毫秒发出报警</td>
+									<td width="20"> </td>
+            						<td >
+                                        <input id="forcedTermination" type="checkbox" checked="true"/><font color="red">超过后强制终止job</font>
+                                    </td>
+        						</tr>
+                            </table>
+                        </td>
+                	</tr>
+					<tr height="10">
+						<td >
+							<hr />
+                        </td>
+                    </tr>
+                	<tr>
+						<td >
+							<table>
+								<tr style="font-size:14">
+                            		<td align="right">Job执行结束后有超过</td>
+									<td width="5"> </td>
+                                    <td >
+										<input id="errorRate" type="text" style="text-align:right;font-size:14" size="18" placeholder="简单Job填写50即可"></input>
+									</td>
+									<td width="5"> </td>
+									<td align="left">%的子任务执行失败发出报警</td>
+        						</tr>
+                            </table>
+                        </td>
+                	</tr>
+					<tr height="10">
+						<td >
+							<hr />
+                        </td>
+                    </tr>
+                </table>
+				<br /><br />
+				<p style="font-size:14">
+					报警通知人员设置:
+				</p>
+            	<div id="notifyPerson" style="font-size:14">
+            	</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-danger" onclick="setMonitor()">设置</button>
+            </div>
+        </div>
+	</div>
+</div>
+
+<input id="contactCount" type="hidden" />
+
+<script language="javascript">
+
+	function showGroupCluster(clusterId){
+		var path = "jobMonitor.htm?clusterId=" + clusterId;
+		location.href = path;
+	}
+	
+	function showJobStatus(groupId){
+		if($("#group_" + groupId).is(':hidden') == true){
+
+			var pageCount = 0;
+			var path = "jobManager.do?action=JobManageAction&event_submit_do_get_group_jobs_count=1";
+			jQuery.ajax({
+				url: path,
+				type: "POST",
+				dataType:'json',
+				data:{'groupId': groupId, 'clusterId':$("#clusterId").val()}
+				,
+				success:function(json){
+                    if(json.success == true) {
+                        pageCount = json.pageCount;
+                        var jt = "";
+                        jt += "<div><table id=table_" + groupId + " class='table'><tr><td>Job ID</td><td>Job描述</td><td>操作</td></tr>";
+                        jt += "</table>";
+                        jt += "<div id='jobPagination_" + groupId + "' class='easyui-pagination pull-right'></div></div>";
+                        $("#group_" + groupId).html(jt);
+                        // 绑定分页
+                        $("#jobPagination_" + groupId).pagination({
+                            total:pageCount,
+                            pageSize:10,
+                            pageList:[5,10,20],
+                            displayMsg:"",
+                            beforePageText:"页",
+                            afterPageText:"共{pages}",
+                            onSelectPage:function(pageNumber, pageSize){groupPagesCallback(groupId, pageNumber, pageSize);},
+                            onRefresh:function(pageNumber, pageSize){groupPagesCallback(groupId, pageNumber, pageSize);},
+                        });
+                        initGroupJobsData(groupId, 1, 10);
+                    } else {
+                        $.toast({
+                            text : "获取失败!" + json.errMsg,
+                            position : 'top-right',
+                            bgColor : 'red',
+                            textColor : '#eee',
+                            hideAfter : false,
+                        });
+                    }
+				}
+				,
+				error:function(xhr, status, error){
+                    $.toast({
+                        text : "获取失败!",
+                        position : 'top-right',
+                        bgColor : 'red',
+                        textColor : '#eee',
+                    });
+				}
+			}
+			);
+		}
+		else{
+			$("#group_" + groupId).hide();
+		}
+	}
+	
+	function groupPagesCallback(groupId, pageNumber, pageSize){
+		initGroupJobsData(groupId, pageNumber, pageSize);
+	}
+	
+	function initGroupJobsData(groupId, pageId, pageSize){
+		// 请求数据，刷新job表格;
+		var path = "jobManager.do?action=JobManageAction&event_submit_do_get_group_jobs=1";
+		jQuery.ajax({
+			url: path,
+			type: "POST",
+			dataType:'json',
+			data:{'groupId': groupId, 'page':pageId, 'clusterId':$("#clusterId").val(), 'pageSize':pageSize}
+			,
+			success:function(json){
+                if(json.success == true) {
+                    jobsArray = json.groupJobs;
+                    $("#table_" + groupId + " tr:gt(0)").remove();
+                    var tbody = "";
+                    for(i = 0; i < jobsArray.length; i++){
+                        jobJson = jobsArray[i];
+                        var jt = "";
+                        jt += "<tr><td>" + jobJson.jobId + "</td> ";
+                        jt += "<td>" + jobJson.jobDesc + "</td>";
+                        jt += "<td><a onclick='showMonitorSettings(&quot;"
+                                + groupId + "&quot;," + jobJson.jobId +")' >监控配置</a>&nbsp;&nbsp</td></tr>";
+                        tbody += jt;
+                    }
+                    $("#table_" + groupId).append(tbody);
+                    $("#group_" + groupId).show();
+                } else {
+                    $.toast({
+                        text : "获取失败!" + json.errMsg,
+                        position : 'top-right',
+                        bgColor : 'red',
+                        textColor : '#eee',
+                        hideAfter : false,
+                    });
+                }
+			}
+			,
+			error:function(xhr, status, error){
+                $.toast({
+                    text : "获取失败!",
+                    position : 'top-right',
+                    bgColor : 'red',
+                    textColor : '#eee',
+                });
+			}
+		}
+		);
+	}
+	
+	function showMonitorSettings(groupId, jobId){
+		// 先去请求监控数据;
+		var path = "jobMonitor.do?action=JobMonitorAction&event_submit_do_get_monitor_settings=1";
+		jQuery.ajax({
+			url: path,
+			type: "POST",
+			dataType:'json',
+			data:{'jobId': jobId, 'clusterId':$("#clusterId").val()},
+			success:function(json){
+				// 已经设置了告警
+				if(json.success == true) {
+					if(json.isSet == true) {
+                        $("#timeoutLimit").val(json.timeoutLimit);
+                        $("#errorRate").val(json.errorRate);
+						$("#forcedTermination").attr("checked",json.forcedTermination);
+						$("#notFireTimes").val(json.notFireTimes);
+                        var nt = "";
+                        nt += "<div><table id='notifyTable'>";
+                        nps = json.notifiers;
+                        for (i = 0; i < nps.length; i++) {
+                            np = nps[i];
+                            nt += "<tr style='font-size:14'><td>手机: <input id='mobile" + i + "' type='text'value='"
+                            + np.mobileId + "'/></td><td width='10'></td><td>工号: <input id='ww" + i + "' type='text'value='"
+							+ np.wwId + "' /></td><td width='10'></td><td><a href='#' onclick='delRow(this)'>删除</a></td></tr><tr height='5'><td></td></tr>";
+                        }
+                        $("#contactCount").val(nps.length);
+                        $("#monitorGroup").val(groupId);
+                        $("#monitorJob").val(jobId);
+                        nt += "</table></div>";
+                        nt += "<br />";
+                        nt += "<input id='addMoreNotify' type='button' value='添加报警通知人' class='btn btn-primary' onclick='addMoreNotify()' />";
+                        $("#notifyPerson").html(nt);
+                        $("#monitor-modal").modal();
+                    } else {
+                        // 未设置告警;
+                        $("#timeoutLimit").val("");
+                        $("#errorRate").val("");
+						var ft = true;
+						$("#forcedTermination").attr("checked", true);
+						$("#notFireTimes").val(1);
+                        var nt = "";
+                        nt += "<div><table id='notifyTable'>";
+                        $("#contactCount").val(0);
+                        $("#monitorGroup").val(groupId);
+                        $("#monitorJob").val(jobId);
+                        nt += "</table></div>";
+                        nt += "<br />";
+                        nt += "<input id='addMoreNotify' type='button' value='添加报警通知人' class='btn btn-primary' onclick='addMoreNotify()' />";
+                        $("#notifyPerson").html(nt);
+                        $("#monitor-modal").modal();
+					}
+					
+				} else {
+                    $.toast({
+                        text : "请求出错!原因:" + json.errMsg,
+                        position : 'top-right',
+                        bgColor : 'red',
+                        textColor : '#eee',
+                        hideAfter : false,
+                    });
+				}
+			},
+			error:function(xhr, status, error){
+                $.toast({
+                    text : "获取失败, 请重试!",
+                    position : 'top-right',
+                    bgColor : 'red',
+                    textColor : '#eee',
+                });
+			}
+		}
+		);
+	}
+	
+	function setMonitor() {
+
+		// 校验输入;
+		var timeoutLimit = $("#timeoutLimit").val();
+		var errorRate = $("#errorRate").val();
+		var notFireTimes = $("#notFireTimes").val();
+		var forcedTermination = $("#forcedTermination").is(':checked');
+		if(checkInt(timeoutLimit) == false) {
+            $.toast({
+                text : "超时时间设置不正确！",
+                position : 'top-right',
+                bgColor : 'red',
+                textColor : '#eee',
+            });
+			return;
+		}
+        if(checkInt(errorRate) == false) {
+            $.toast({
+                text : "错误率设置不正确！",
+                position : 'top-right',
+                bgColor : 'red',
+                textColor : '#eee',
+            });
+			return;
+        }
+        if(errorRate > 100) {
+            $.toast({
+                text : "错误率设置不能超过100%！",
+                position : 'top-right',
+                bgColor : 'red',
+                textColor : '#eee',
+            });
+            return;
+        }
+		// 提交到服务端;
+		var path = "jobMonitor.htm?action=JobMonitorAction&event_submit_do_set_monitor=1";
+		// 将阀值拼成一个json;
+		var warningSetup = "{'timeoutLimit':" + $("#timeoutLimit").val() + ",";
+		warningSetup += "'forcedTermination':" + forcedTermination + ",";
+		warningSetup += "'notFireTimes':" + notFireTimes + ",";
+		warningSetup += "'errorRate':" + $("#errorRate").val() + "}";
+		// 将报警人员拼成一个json;
+		var contact = [];
+		var contactCount = $("#contactCount").val();
+		var count = 0;
+		if(!isNaN(contactCount)) {
+			count = parseInt(contactCount);
+		}
+		if(count != 0){
+			count = 50;
+			for(i = 0; i < count; i ++){
+				
+				if($("#delStatus" + i).val() != "deleted") {
+                    var mobiledId = $('#mobile' + i).val();
+                    var wwId = $('#ww' + i).val();
+					if(null == mobiledId || 'undefined' == mobiledId || null == wwId || 'undefined' == wwId) {
+    					continue ;
+    				}
+                    wwId = trim(wwId);
+                    if(wwId == "" || wwId == null) {
+                        $.toast({
+                            text : "工号不能为空！",
+                            position : 'top-right',
+                            bgColor : 'red',
+                            textColor : '#eee',
+                        });
+                        return;
+                    }
+                    // 校验手机号码;
+                    if(checkMobileId(mobiledId) == false) {
+                        $.toast({
+                            text : "手机号码" + mobiledId + ",设置不正确！",
+                            position : 'top-right',
+                            bgColor : 'red',
+                            textColor : '#eee',
+                        });
+                        return;
+                    }
+                    var arr  ={
+                        "mobileId" : mobiledId,
+                        "wwId" : wwId
+                    }
+                    contact.push(arr);
+				}
+			}
+		}
+		var uppath = "jobMonitor.do?action=JobMonitorAction&event_submit_do_set_monitor=1";
+		var c = $("#clusterId").val();
+		jQuery.ajax({
+			url: uppath,
+			type: "POST",
+			dataType:'json',
+			data:{
+				'serverClusterId':$("#clusterId").val(), 'groupId':$("#monitorGroup").val(), 'jobId':$("#monitorJob").val(),
+				'warningSetup':warningSetup, 'contact':JSON.stringify(contact)
+			}
+			,
+			success:function(json){
+                $("#monitor-modal").modal('hide');
+                $.toast({
+                    text : "设置成功！",
+                    position : 'top-right',
+                    bgColor : 'green',
+                    textColor : '#eee',
+                });
+			}
+			,
+			error:function(xhr, status, error){
+                $.toast({
+                    text : "设置失败, 请重试！",
+                    position : 'top-right',
+                    bgColor : 'red',
+                    textColor : '#eee',
+                });
+			}
+		});
+	}
+
+    function checkInt(input) {
+        var re = new RegExp("^[-]{0,1}[0-9]{1,19}$");
+        if (!re.test(input)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    function checkMobileId(mobileId) {
+        var re = new RegExp("^1[3|4|5|7|8][0-9]{9}$");
+        if (!re.test(mobileId)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    function trim(str){
+    　　 return str.replace(/(^\s*)|(\s*$)/g, "");
+　　 }
+
+	function addMoreNotify(){
+		// 刷新列表;
+		var length = $("#notifyTable")[0].rows.length;
+		
+		var newRowH = document.getElementById('notifyTable').insertRow(length);
+		newRowH.style.height=5;
+		newRowH.insertCell(0);
+		newRowH.insertCell(1);
+		newRowH.insertCell(2);
+		newRowH.insertCell(3);
+		newRowH.insertCell(4);
+		
+		// 插入新行;
+		var newRow= document.getElementById('notifyTable').insertRow(length);
+		
+		newRow.style.fontSize=14;
+		
+		// 插入新的列;
+		var y=newRow.insertCell(0);
+		y.innerHTML="手机: <input id='mobile"+length+"' type='text' />";
+		y = newRow.insertCell(1);
+		y.width=10;
+		y = newRow.insertCell(2);
+		y.innerHTML="工号: <input id='ww"+length+"' type='text' />";
+		y = newRow.insertCell(3);
+		y.width=10;
+        y = newRow.insertCell(4);
+        y.innerHTML="<a href='#' onclick='delRow(this, " +length + ")'>删除</a><input id='delStatus" + length + "' type='hidden'/>";
+		
+		$("#contactCount").val(parseInt($("#contactCount").val()) + 1);
+		
+	}
+
+    function delRow(rows, length){
+		$(rows).parent("td").parent("tr").prev().remove();
+        $(rows).parent("td").parent("tr").remove();
+		$("#delStatus" + length).val("deleted");
+        $("#contactCount").val(parseInt($("#contactCount").val()) - 1);
+    }
+</script>

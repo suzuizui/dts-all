@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="gb2312"?>
+<assembly>
+	<id>tgz</id>
+	<baseDirectory>dts-console.war</baseDirectory>
+	<formats>
+    	<format>tar.gz</format>
+  	</formats>
+	<fileSets>
+   		<fileSet>
+     		<directory>target/dts-console</directory>
+			<outputDirectory></outputDirectory>
+   			<includes>
+     			<include>**/**</include>
+   			</includes>
+   		</fileSet>
+	</fileSets>
+</assembly>

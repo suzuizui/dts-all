@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="JobOperation">
+
+    <typeAlias alias="jobOperation" type="com.le.dts.common.domain.store.JobOperation" />
+
+    <resultMap id="jobOperationResultMap" class="jobOperation">
+        <result property="id" column="id"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+        <result property="jobId" column="job_id"/>
+        <result property="operation" column="operation"/>
+        <result property="server" column="server" />
+    </resultMap>
+
+    <sql id="jobOperationColumns">
+        id,
+        gmt_create,
+        gmt_modified,
+        job_id,
+        operation,
+        server
+    </sql>
+
+    <insert id="insert">
+        insert
+        into
+        dts_job_operation(
+        gmt_create,
+        gmt_modified,
+        job_id,
+        operation,
+        server
+        ) values (
+        NOW(),
+        NOW(),
+        #jobId#,
+        #operation#,
+        #server#
+        )
+        <selectKey resultClass="long" keyProperty="id">
+            <![CDATA[SELECT LAST_INSERT_ID() AS ID ]]>
+        </selectKey>
+    </insert>
+
+    <select id="queryByServer" resultMap="jobOperationResultMap">
+        select 
+        	<include refid="jobOperationColumns" /> 
+        from 
+        	dts_job_operation 
+        where 
+        	server = #server# 
+        order by id asc
+    </select>
+
+    <select id="queryByJobId" resultMap="jobOperationResultMap">
+        select
+        <include refid="jobOperationColumns" />
+        from
+        dts_job_operation
+        where
+        job_id = #jobId#
+    </select>
+
+    <update id="updateOperation">
+        update
+        dts_job_operation
+        set
+        gmt_modified = now(),
+        operation = #operation#
+        where
+        job_id = #jobId# and
+        server = #server#
+    </update>
+
+    <delete id="delete">
+        delete
+        from
+        dts_job_operation
+        where
+        id = #id#
+    </delete>
+
+</sqlMap>

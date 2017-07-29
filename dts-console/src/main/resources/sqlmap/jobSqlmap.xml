@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="Job">
+	
+	<typeAlias alias="job" type="com.le.dts.common.domain.store.Job" />
+	
+	<typeAlias alias="jobPageQuery" type="com.le.dts.console.page.JobPageQuery" />
+	
+	<resultMap id="jobResultMap" class="job">
+		<result property="id" column="id"/>
+		<result property="gmtCreate" column="gmt_create"/>
+		<result property="gmtModified" column="gmt_modified"/>
+		<result property="serverGroupId" column="server_group_id"/>
+		<result property="clientGroupId" column="client_group_id"/>
+		<result property="description" column="description"/>
+		<result property="createrId" column="creater_id"/>
+		<result property="type" column="type"/>
+		<result property="cronExpression" column="cron_expression"/>
+		<result property="jobProcessor" column="job_processor"/>
+		<result property="maxInstanceAmount" column="max_instance_amount"/>
+		<result property="jobArguments" column="job_arguments"/>
+		<result property="status" column="status"/>
+		<result property="level" column="level"/>
+	</resultMap>
+	
+	<sql id="jobColumns">
+		id, 
+		gmt_create, 
+		gmt_modified, 
+    	server_group_id, 
+		client_group_id, 
+		description, 
+		creater_id,
+		type,
+		cron_expression,
+		job_processor,
+		max_instance_amount,
+		job_arguments,
+		status,
+		level
+    </sql>
+	
+	<insert id="insert">
+		insert 
+			into 
+		dts_job(
+			gmt_create, 
+			gmt_modified, 
+	    	server_group_id, 
+			client_group_id, 
+			description, 
+			creater_id,
+			type,
+			cron_expression,
+			job_processor,
+			max_instance_amount,
+			job_arguments,
+			status,
+			level
+		) values (
+			NOW(), 
+			NOW(), 
+			#serverGroupId#, 
+			#clientGroupId#, 
+			#description#, 
+			#createrId#,
+			#type#,
+			#cronExpression#,
+			#jobProcessor#,
+			#maxInstanceAmount#,
+			#jobArguments#,
+			#status#,
+			#level#
+		)
+		<selectKey resultClass="long" keyProperty="id">    
+			<![CDATA[SELECT LAST_INSERT_ID() AS ID ]]>  
+		</selectKey>    
+	</insert>
+	
+	<select id="pageQuery" resultMap="jobResultMap">
+		select 
+			<include refid="jobColumns" /> 
+		from 
+			dts_job 
+		<dynamic prepend=" where "> 
+			<isNotEqual prepend=" AND " property="clientGroupId" compareValue="-1">
+				client_group_id = #clientGroupId# 
+			</isNotEqual>
+			<isNotNull prepend=" AND " property="description">
+				description like '%$description$%' 
+			</isNotNull>
+		</dynamic>
+		order by id desc 
+		LIMIT #startRow#,#pageSize#
+	</select>
+	
+	<select id="query" resultMap="jobResultMap">
+		select 
+			<include refid="jobColumns" /> 
+		from 
+			dts_job 
+		where 
+			server_group_id = #serverGroupId#
+	</select>
+	
+	<select id="queryJobById" resultMap="jobResultMap">
+		select 
+			<include refid="jobColumns" /> 
+		from 
+			dts_job 
+		where 
+			id = #id#
+	</select>
+	
+	<update id="update">
+		update 
+			dts_job 
+		set 
+			gmt_modified = now(),
+			description = #description#,
+			type = #type#,
+			cron_expression = #cronExpression#,
+			job_processor = #jobProcessor#,
+			max_instance_amount = #maxInstanceAmount#,
+            job_arguments = #jobArguments#,
+            level = #level#
+		where 
+			id = #id#
+	</update>
+
+    <update id="updateJobArguments">
+        update
+            dts_job
+        set
+            gmt_modified = now(),
+            job_arguments = #jobArguments#
+        where
+            id = #id#
+    </update>
+	
+	<select id="jobCount" resultClass="java.lang.Integer" parameterClass="job">
+		SELECT 
+			count(*) 
+		FROM 
+			dts_job 
+		<dynamic prepend=" where "> 
+			<isNotEqual prepend=" AND " property="serverGroupId" compareValue="-1">
+				server_group_id = #serverGroupId# 
+			</isNotEqual>
+			<isNotEqual prepend=" AND " property="clientGroupId" compareValue="-1">
+				client_group_id = #clientGroupId# 
+			</isNotEqual>
+			<isNotNull prepend=" AND " property="description">
+				description like '%$description$%' 
+			</isNotNull>
+		</dynamic>
+	</select>
+
+    <select id="jobEnableCount" resultClass="java.lang.Long">
+        SELECT
+        count(*)
+        FROM dts_job
+        where
+        status=1
+    </select>
+
+    <select id="queryEnableList" resultMap="jobResultMap">
+        SELECT
+            <include refid="jobColumns" />
+        from
+            dts_job
+        where
+            status=1
+            and
+            id%#bulkAmout#=#bulkId#
+            ORDER BY id ASC
+            limit #offset#, #length#
+    </select>
+    
+    <select id="queryAllEnableJobList" resultMap="jobResultMap">
+		SELECT 
+			<include refid="jobColumns" /> 
+		from 
+			dts_job 
+		where 
+			status=1 
+            and id > #offset# 
+        ORDER BY id ASC 
+		limit 100
+	</select>
+	
+	<update id="updateJobStatus">
+		update 
+			dts_job 
+		set 
+			gmt_modified = now(),
+			status = #status#
+		where 
+			id = #id#
+	</update>
+	
+	<delete id="delete">
+		delete 
+		from 
+			dts_job 
+		where 
+			id = #id#
+	</delete>
+	
+</sqlMap>

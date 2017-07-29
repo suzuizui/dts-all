@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="ServerGroup">
+	
+	<typeAlias alias="serverGroup" type="com.le.dts.common.domain.store.ServerGroup" />
+	
+	<resultMap id="serverGroupResultMap" class="serverGroup">
+		<result property="id" column="id"/>
+		<result property="gmtCreate" column="gmt_create"/>
+		<result property="gmtModified" column="gmt_modified"/>
+		<result property="clusterId" column="cluster_id"/>
+	</resultMap>
+	
+	<sql id="serverGroupColumns">
+		id, 
+		gmt_create, 
+		gmt_modified, 
+		cluster_id
+    </sql>
+	
+	<insert id="insert">
+		insert 
+			into 
+		dts_server_group(
+			gmt_create, 
+			gmt_modified, 
+			cluster_id
+		) values (
+			NOW(), 
+			NOW(), 
+			#clusterId#
+		)
+		<selectKey resultClass="long" keyProperty="id">    
+			<![CDATA[SELECT LAST_INSERT_ID() AS ID ]]>  
+		</selectKey>    
+	</insert>
+	
+	<select id="query" resultMap="serverGroupResultMap">
+		select 
+			<include refid="serverGroupColumns" /> 
+		from 
+			dts_server_group
+		where
+			cluster_id = #clusterId#
+	</select>
+	
+	<update id="update">
+		update 
+			dts_server_group 
+		set 
+			gmt_modified = now(),
+			cluster_id = #clusterId#
+		where 
+			id = #id#
+	</update>
+	
+	<delete id="delete">
+		delete 
+		from 
+			dts_server_group 
+		where 
+			id = #id#
+	</delete>
+	
+</sqlMap>

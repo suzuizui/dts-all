@@ -1,0 +1,27 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"/>  
+<html>  
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<link href="$cssModule.getURI('/bootstrap.css')" rel="stylesheet" />
+		<link href="$cssModule.getURI('/bootstrap-theme.min.css')" rel="stylesheet" />
+		<link href="$cssModule.getURI('/bootstrap.css')" rel="stylesheet" />
+		
+		<link href="$cssModule.getURI('/dts.css')" rel="stylesheet" />
+		
+        <script type="text/javascript" src="$jsModule.getURI('/jquery-1.11.1.min.js')"></script>
+		<script type="text/javascript" src="$jsModule.getURI('/bootstrap.min.js')"></script>
+
+        <link rel="stylesheet" type="text/css" href="http://g.tbcdn.cn/aliyun/console/1.2.15/styles/select2.css">
+        <link rel="stylesheet" href="http://g.tbcdn.cn/aliyun/console/1.2.12/styles/topbar-jquery.css" />
+        <link rel="stylesheet" type="text/css" href="http://g.tbcdn.cn/aliyun/console/1.2.15/styles/bootstrap/bootstrap.css">
+        <link rel="stylesheet" type="text/css" href="http://g.tbcdn.cn/aliyun/console/1.2.15/styles/console.css">
+        <link rel="stylesheet" type="text/css" href="http://g.tbcdn.cn/aliyun/ecs/1.7.5/styles/console.new.css">
+        <link rel="stylesheet" href="http://g.tbcdn.cn/aliyun/console/1.2.12/styles/topbar-jquery.css" />
+    </head>
+    <body style="padding-top: 60px;">
+		##<div id="header">$control.setTemplate("header.vm")</div>
+        <div id="content">  
+            <div id="main">$screen_placeholder</div>  
+        </div>  
+    </body>  
+</html>  

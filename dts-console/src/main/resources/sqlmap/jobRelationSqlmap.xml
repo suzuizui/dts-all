@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="JobRelation">
+
+	<typeAlias alias="jobRelation" type="com.le.dts.common.domain.store.JobRelation" />
+
+	<resultMap id="jobRelationResultMap" class="jobRelation">
+		<result property="id" column="id"/>
+		<result property="gmtCreate" column="gmt_create"/>
+		<result property="gmtModified" column="gmt_modified"/>
+		<result property="jobId" column="job_id"/>
+		<result property="beforeJobId" column="before_job_id"/>
+        <result property="finishCount" column="finish_count" />
+        <result property="jobInstanceId" column="job_instance_id" />
+        <result property="jobInstanceIdTag" column="job_instance_id_tag" />
+	</resultMap>
+
+	<sql id="jobRelationColumns">
+		id,
+		gmt_create,
+		gmt_modified,
+		job_id,
+		before_job_id,
+        finish_count,
+        job_instance_id,
+        job_instance_id_tag
+	</sql>
+
+	<insert id="insert">
+		insert
+		into
+		dts_job_relation(
+		gmt_create,
+		gmt_modified,
+		job_id,
+		before_job_id,
+        finish_count,
+        job_instance_id,
+        job_instance_id_tag
+		) values (
+		NOW(),
+		NOW(),
+		#jobId#,
+		#beforeJobId#,
+        #finishCount#,
+        #jobInstanceId#,
+        #jobInstanceIdTag#
+		)
+		<selectKey resultClass="long" keyProperty="id">
+			<![CDATA[SELECT LAST_INSERT_ID() AS ID ]]>
+		</selectKey>
+	</insert>
+
+	<select id="queryBefore" resultMap="jobRelationResultMap">
+		select
+		<include refid="jobRelationColumns" />
+		from
+		dts_job_relation
+		where
+		job_id = #jobId#
+	</select>
+
+	<select id="queryAfter" resultMap="jobRelationResultMap">
+		select
+		<include refid="jobRelationColumns" />
+		from
+		dts_job_relation
+		where
+		before_job_id = #beforeJobId#
+	</select>
+
+	<update id="update">
+		update
+		dts_job_relation
+		set
+		gmt_modified = now(),
+		before_job_id = #beforeJobId#
+		where
+		job_id = #jobId#
+	</update>
+
+    <update id="updateFinishCount">
+        update
+        dts_job_relation
+        set
+        gmt_modified = now(),
+        finish_count = #finishCount#,
+        job_instance_id = #jobInstanceId#,
+        job_instance_id_tag = #jobInstanceIdTag#
+        where
+        job_id = #jobId# and
+        before_job_id = #beforeJobId#
+    </update>
+    
+    <update id="updateResetFinishCount">
+		update 
+			dts_job_relation 
+		set 
+			gmt_modified = now(),
+			finish_count = 0 
+		where 
+			before_job_id = #beforeJobId#
+	</update>
+
+	<delete id="delete">
+		delete
+		from
+		dts_job_relation
+		where
+		job_id = #jobId# and
+		before_job_id = #beforeJobId#
+	</delete>
+	
+	<delete id="deleteAllRelation">
+		delete 
+		from 
+			dts_job_relation 
+		where 
+			job_id = #jobId# or 
+			before_job_id = #jobId#
+	</delete>
+
+</sqlMap>

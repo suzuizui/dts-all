@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- DTS客户端 -->
+    <bean id="dtsClient" class="com.le.dts.client.DtsClient" init-method="init">
+        <property name="groupId">
+            <value>1-1-2-12</value>
+        </property>
+        <property name="consumerThreadsMap">
+            <map>
+                <entry key="com.le.dts.demo.processor.DemoParallelProcessor" value="10" />
+            </map>
+        </property>
+    </bean>
+
+    <bean id="demoProcessor" class="com.le.dts.demo.processor.DemoProcessor"/>
+
+    <bean id="demoParallelProcessor" class="com.le.dts.demo.processor.DemoParallelProcessor"/>
+
+</beans>

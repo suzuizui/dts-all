@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="GB2312"?>
+<!DOCTYPE sqlMapConfig PUBLIC "-//iBATIS.com//DTD SQL Map Config 2.0//EN" "http://www.ibatis.com/dtd/sql-map-config-2.dtd">
+<sqlMapConfig>
+
+	<settings useStatementNamespaces="true"/>
+	
+    <sqlMap resource="sqlmap/clientGroupSqlmap.xml" />
+    <sqlMap resource="sqlmap/jobSqlmap.xml" />
+    <sqlMap resource="sqlmap/serverGroupSqlmap.xml" />
+    <sqlMap resource="sqlmap/jobInstanceSnapshotSqlmap.xml" />
+    <sqlMap resource="sqlmap/jobRelationSqlmap.xml" />
+    <sqlMap resource="sqlmap/clusterSqlmap.xml" />
+    <sqlMap resource="sqlmap/warningSetupSqlmap.xml" />
+    <sqlMap resource="sqlmap/taskSnapshotSqlmap.xml" />
+    <sqlMap resource="sqlmap/jobServerRelationSqlmap.xml" />
+    <sqlMap resource="sqlmap/userGroupRelation.xml" />
+    <sqlMap resource="sqlmap/jobOperationSqlmap.xml" />
+    <sqlMap resource="sqlmap/designatedMachineSqlmap.xml" />
+    <sqlMap resource="sqlmap/flowInstanceSqlmap.xml" />
+    <sqlMap resource="sqlmap/serverJobInstanceMappingmap.xml" />
+    <sqlMap resource="sqlmap/registerUserRelation.xml" />
+
+</sqlMapConfig>

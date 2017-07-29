@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="ClientGroup">
+	
+	<typeAlias alias="clientGroup" type="com.le.dts.common.domain.store.ClientGroup" />
+	
+	<resultMap id="clientGroupResultMap" class="clientGroup">
+		<result property="id" 				column="id"/>
+		<result property="gmtCreate" 		column="gmt_create"/>
+		<result property="gmtModified" 		column="gmt_modified"/>
+		<result property="serverGroupId" 	column="server_group_id"/>
+		<result property="logicalGroupId" 	column="logical_group_id"/>
+		<result property="description" 		column="description"/>
+		<result property="securityControl" 	column="security_control"/>
+	</resultMap>
+	
+	<sql id="clientGroupColumns">
+		id, 
+		gmt_create, 
+		gmt_modified, 
+    	server_group_id, 
+    	logical_group_id, 
+		description,
+		security_control
+    </sql>
+	
+	<insert id="insert">
+		insert 
+			into 
+		dts_client_group(
+			gmt_create, 
+			gmt_modified, 
+	    	server_group_id, 
+	    	logical_group_id, 
+			description,
+			security_control
+		) values (
+			NOW(), 
+			NOW(), 
+			#serverGroupId#, 
+			#logicalGroupId#, 
+			#description#,
+			#securityControl#
+		)
+		<selectKey resultClass="long" keyProperty="id">    
+			<![CDATA[SELECT LAST_INSERT_ID() AS ID ]]>  
+		</selectKey>    
+	</insert>
+	
+	<select id="query" resultMap="clientGroupResultMap">
+		select 
+			<include refid="clientGroupColumns" /> 
+		from 
+			dts_client_group 
+		where 
+			server_group_id = #serverGroupId# and 
+			logical_group_id = #logicalGroupId#
+	</select>
+
+	<update id="update">
+		update 
+			dts_client_group 
+		set 
+			gmt_modified = now(),
+			description = #description#
+		where 
+			id = #id#
+	</update>
+	
+	<delete id="delete">
+		delete 
+		from 
+			dts_client_group 
+		where 
+			id = #id#
+	</delete>
+	
+</sqlMap>

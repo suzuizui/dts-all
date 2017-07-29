@@ -1,0 +1,239 @@
+<input type="hidden" id="clusterId" value="$!clusterId" />
+<input type="hidden" id="outerUser" value="$outerUser" />
+<div class="navbar navbar-default navbar-fixed-top" role="navigation" style="background:#FFFFFF">
+	<div class="container-fluid">
+		<div class="row">
+			<div class="navbar-header">
+				<a class="navbar-brand" href="#" style='color:#FF9933;font-weight:500'>&nbsp;&nbsp;分布式定时服务DTS</a>
+			</div>
+			<div class="navbar-collapse collapse">
+				<ul class="nav navbar-nav">
+					<li class="active">
+                        <a href="jobManager.htm" style="color:#FFFFFF;background:#555555">Job配置</a>
+					</li>
+					<li >
+						<a href="jobControl.htm" style='color:#000000;weight:600'>Job管控</a>
+					</li>
+					#if($!showAuth)
+					<li >
+						<a href="jobAuth.htm" style='color:#000000;weight:600'>权限控制</a>
+					</li>
+					#end
+					#if($!showAdvertisement)
+					<li >
+						<a href="$!{timerMsgDomainName}tmq-console/" target="_blank" style='color:#000000;weight:600'>TMQ</a>
+					</li>
+					<li >
+						<a href="http://gitlab.alibaba-inc.com/middleware-dts/tmq-wiki/wikis/home" target="_blank" style='color:#000000;weight:600'>定时消息wiki</a>
+					</li>
+					#end
+				</ul>
+				<div class="pull-right" style="padding-right:50px">
+					<table >
+						<tr height="50">
+							<td >
+								<span style="color:#000000">欢迎&nbsp;$!userName</span>
+                            </td>
+                        </tr>
+                    </table>
+    			</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="container-fluid">
+    <div class="col-sm-3 col-md-2">
+        <div class="list-group">
+            <a href="jobManager.vm?clusterId=$!clusterId" class="list-group-item">分组管理</a>
+            <a href="#" class="list-group-item active" style="background:#555555">Job依赖配置</a>
+        </div>
+    </div>
+    <div class="col-sm-9 col-md-10">
+        <div class="row">
+            <h4 class="header">依赖管理</h4>
+        </div>
+        <div class="row">
+            <div>
+                后置Job ID&nbsp;<input id="job_id" type="text"></input>&nbsp;&nbsp;
+                依赖Job ID&nbsp;<input id="relation_job_id" type="text"></input>&nbsp;&nbsp;
+                <button id="create_relation" class="btn btn-info" onclick="createJobRelation()">建立依赖</button>
+            </div>
+        </div>
+        <br>
+        <div>
+            <table class="table table-bordered">
+                #foreach($userJobRelation in $!userJobRelations.entrySet())
+                    <tr>
+                        <td>
+                            <div>
+                                <label>后置Job ID:$!userJobRelation.getKey().getId()</label>
+                                <label>Job描述:$userJobRelation.getKey().getDescription()</label>
+                                <br>
+                                依赖Job列表
+                            </div>
+                            <table class="table table-bordered">
+                                <tr>
+                                    <td>
+                                        Job ID
+                                    </td>
+                                    <td>
+                                        Job描述
+                                    </td>
+                                    <td>
+                                        操作
+                                    </td>
+                                </tr>
+                                #foreach($relationJob in $userJobRelation.getValue())
+                                    <tr>
+                                        <td>
+                                            $!relationJob.getId()
+                                        </td>
+                                        <td>
+                                            $!relationJob.getDescription()
+                                        </td>
+                                        <td>
+                                            <button name="deleteRelationBtn" class="btn btn-danger btn-small" onclick="deleteJobRelation($!userJobRelation.getKey().getId(),$!relationJob.getId())">删除依赖</button>
+                                        </td>
+                                    </tr>
+                                #end
+                            </table>
+                        </td>
+                    </tr>
+                #end
+            </table>
+        </div>
+    </div>
+</div>
+
+<script language="javascript">
+
+    function createJobRelation() {
+        var jobId = $("#job_id").val();
+        if(jobId == "" || jobId == null) {
+            $.toast({
+                text : "后置Job不能为空！",
+                position : 'top-right',
+                bgColor : 'red',
+                textColor : '#eee',
+            });
+            return;
+        }
+        jobId = trim(jobId);
+        if(jobId == "") {
+            $.toast({
+                text : "后置Job输入为无意义的字符！",
+                position : 'top-right',
+                bgColor : 'red',
+                textColor : '#eee',
+            });
+            return;
+        }
+
+        var relationJobId = $("#relation_job_id").val();
+        if(relationJobId == "" || relationJobId == null) {
+            $.toast({
+                text : "依赖Job不能为空！",
+                position : 'top-right',
+                bgColor : 'red',
+                textColor : '#eee',
+            });
+            return;
+        }
+        relationJobId = trim(relationJobId);
+        if(relationJobId == "") {
+            $.toast({
+                text : "依赖Job输入为无意义的字符！",
+                position : 'top-right',
+                bgColor : 'red',
+                textColor : '#eee',
+            });
+            return;
+        }
+
+        var path = "jobRelation.do?action=JobRelationAction&event_submit_do_create_relation=1";
+        jQuery.ajax({
+            url: path,
+            type: "POST",
+            dataType:'json',
+            data:{'jobId': jobId, 'relationJobId': relationJobId}
+            ,
+            success:function(json){
+                if(json.success == "true") {
+                    $.toast({
+                        text : "关联依赖成功!",
+                        position : 'top-right',
+                        bgColor : 'green',
+                        textColor : '#eee',
+                    });
+                    location.href = "jobRelation.htm?clusterId=" + $("#clusterId").val();
+                } else {
+                    $.toast({
+                        text : "关联依赖失败！" + json.errMsg,
+                        position : 'top-right',
+                        bgColor : 'red',
+                        textColor : '#eee',
+                        hideAfter:false
+                    });
+                }
+            }
+            ,
+            error:function(xhr, status, error){
+                $.toast({
+                    text : "关联依赖失败, 请重试!",
+                    position : 'top-right',
+                    bgColor : 'red',
+                    textColor : '#eee',
+                });
+            }
+        });
+    }
+
+    function deleteJobRelation(jobId, relationJobId) {
+        var result = confirm("确认要删除依赖吗？");
+        if(true != result) {
+            return;
+        }
+        var path = "jobRelation.do?action=JobRelationAction&event_submit_do_delete_relation=1";
+        jQuery.ajax({
+            url: path,
+            type: "POST",
+            dataType:'json',
+            data:{'jobId': jobId, 'relationJobId': relationJobId}
+            ,
+            success:function(json){
+                if(json.success == true) {
+                    $.toast({
+                        text : "删除依赖成功!",
+                        position : 'top-right',
+                        bgColor : 'green',
+                        textColor : '#eee',
+                    });
+                } else {
+                    $.toast({
+                        text : "删除依赖失败！" + json.errMsg,
+                        position : 'top-right',
+                        bgColor : 'red',
+                        textColor : '#eee',
+                        hideAfter:false
+                    });
+                }
+                location.href = "jobRelation.htm?clusterId=" + $("#clusterId").val();
+            }
+            ,
+            error:function(xhr, status, error){
+                $.toast({
+                    text : "删除失败, 请重试!",
+                    position : 'top-right',
+                    bgColor : 'red',
+                    textColor : '#eee',
+                    hideAfter:false
+                });
+            }
+        });
+    }
+
+    function trim(str){
+    　　 return str.replace(/(^\s*)|(\s*$)/g, "");
+　　 }
+
+</script>

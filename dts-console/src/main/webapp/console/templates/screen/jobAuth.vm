@@ -1,0 +1,277 @@
+<input type="hidden" id="userId" value="$userId" />
+<input type="hidden" id="outerUser" value="$outerUser" />
+<input type="hidden" id="clusterId" value="$clusterId" xmlns="http://www.w3.org/1999/html"/>
+<input type="hidden" id="clusterGroupId" value="$!serverCluster.getServerGroupId()" />
+<div class="navbar navbar-default navbar-fixed-top" role="navigation" style="background:#FFFFFF">
+	<div class="container-fluid">
+		<div class="row">
+			<div class="navbar-header">
+				<a class="navbar-brand" href="#" style='color:#FF9933;font-weight:500'>&nbsp;&nbsp;分布式定时服务DTS</a>
+			</div>
+			<div class="navbar-collapse collapse">
+				<ul class="nav navbar-nav">
+					<li >
+						<a href="jobManager.htm" style='color:#000000;weight:600'>Job配置</a>
+					</li>
+					<li >
+						<a href="jobControl.htm" style='color:#000000;weight:600'>Job管控</a>
+					</li>
+					#if($!showAuth)
+					<li class="active">
+						<a href="jobAuth.htm" style="color:#FFFFFF;background:#555555">权限控制</a>
+					</li>
+					#end
+					#if($!showAdvertisement)
+					<li >
+						<a href="$!{timerMsgDomainName}tmq-console/" target="_blank" style='color:#000000;weight:600'>TMQ</a>
+					</li>
+					<li >
+						<a href="http://gitlab.alibaba-inc.com/middleware-dts/tmq-wiki/wikis/home" target="_blank" style='color:#000000;weight:600'>定时消息wiki</a>
+					</li>
+					#end
+				</ul>
+				<div class="pull-right" style="padding-right:50px">
+					<table >
+						<tr height="50">
+							<td >
+								<span style="color:#000000">欢迎&nbsp;$!userName</span>
+                            </td>
+                        </tr>
+                    </table>
+    			</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="container-fluid">
+	<div class="col-sm-3 col-md-2">
+		<div class="list-group">
+			<a href="#" class="list-group-item active" style="background:#555555">权限管理</a>
+		</div>
+	</div>
+	<div class="col-sm-9 col-md-10">
+		<div class="row">
+			<h4 class="header">分组权限</h4>
+		</div>
+		<div class="row">
+			<div>
+				#foreach($cluster in $userServerCluster.entrySet())
+					#if($!cluster.getValue().getId() == $!clusterId)
+                        <button id="reginId_all_btn" type="button" class="btn btn-info" onclick="showGroupCluster('$!cluster.getValue().getId()')">
+							$!cluster.getValue().getDescription()
+                        </button>
+					#else
+                        <button id="reginId_all_btn" type="button" class="btn btn-default" onclick="showGroupCluster('$!cluster.getValue().getId()')">
+							$!cluster.getValue().getDescription()
+                        </button>
+					#end
+				#end
+			</div>
+		</div>
+		<hr />
+		<div>
+			<table class="table table-bordered">
+				#foreach($group in $userGroups)
+					<tr>
+						<td>
+							<table class="table table-bordered">
+								<tr>
+									<td width="200" align="center">
+										分组ID:$group.getSystemDefineGroupId()
+									</td>
+									<td>
+										&nbsp;&nbsp;&nbsp;$group.getGroupDesc()
+									</td>
+									<td width="120" align="center">
+										Job数:$group.getGroupJobNum()
+									</td>
+								</tr>
+								<tr>
+									<td colspan="3">
+										<button id="viewJobStatus" data-toggle="modal" class="btn btn-default pull-left" onclick="showAuthModal('$group.getSystemDefineGroupId()','$group.getGroupDesc()')">
+										授权
+										</button>
+									</td>
+								</tr>
+								<tr >
+                                    <td colspan="3">
+										<table class="table table-bordered">
+											<tr >
+												<td width="100" align="center">授权ID</td>
+												<td width="250" align="center">授权时间</td>
+												<td width="200" align="center">被授权用户工号</td>
+												<td  align="center">操作</td>
+                                            </tr>
+											#foreach($!relation in $group.relationList)
+                                            <tr>
+												<td width="100" align="center">
+													$!relation.id
+                                                </td>
+												<td width="250" align="center">
+													$!relation.gmtCreate
+                                                </td>
+												<td width="200" align="center">
+													$!relation.userId
+                                                </td>
+												<td  align="center">
+													<a onclick="deleteAuth('$!relation.id')">取消授权</a>
+												</td>
+											</tr>
+											#end
+                                        </table>
+									</td>
+                                </tr>
+							</table>
+						</td>
+					</tr>
+				#end
+			</table>
+		</div>
+	</div>
+</div>
+
+<div id="group-modal" class="modal fade" role="dialog">
+	<div class="modal-dialog">
+        <div class="modal-content">
+    		<div class="modal-header">
+    			<a class="close" data-dismiss="modal">×</a>
+    			<h4 class="modal-title">授权给其他用户</h4>
+            </div>
+            <div class="modal-body">
+				<input id="authGroup" type="hidden" />
+    			授权组描述：<lable id="groupDesc"></lable>
+            	<br />
+            	&nbsp;
+            	<p>
+            	请输入被授权用户的ID
+            	</p>
+            	<br>
+            	<p>
+            	工号:
+            	<input id="aliyunUserName" type="text">
+            	</input>
+            	</p>
+          	</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" onclick="grantAuth()">确定</button>
+            </div>
+        </div>
+	</div>
+</div>
+
+<script language="javascript">
+	function showGroupCluster(clusterId){
+		var path = "jobAuth.htm?clusterId=" + clusterId;
+		location.href = path;
+	}
+	
+	function showAuthModal(groupId, groupDesc) {
+		$("#authGroup").val(groupId);
+		$("#groupDesc").text(groupDesc);
+		$("#group-modal").modal();
+	}
+	
+	function grantAuth(){
+		var user = $('#aliyunUserName').val();
+        if(user == "" || user == null) {
+            $.toast({
+                text : "被授权用户不能为空！",
+                position : 'top-right',
+                bgColor : 'red',
+                textColor : '#eee',
+            });
+			return;
+        }
+        user = trim(user);
+        if(user == "") {
+            $.toast({
+                text : "授权用户输入为无意义的字符！",
+                position : 'top-right',
+                bgColor : 'red',
+                textColor : '#eee',
+            });
+            return;
+        }
+
+		var urlRefresh = 'jobAuth.htm?clusterId=$!clusterId';
+		
+        // 提交到服务端;
+		var path = "jobManager.do?action=JobAuthAction&event_submit_do_grant_auth=1";
+		jQuery.ajax({
+			url: path,
+			type: "POST",
+			dataType:'json',
+			data:{'userId': $('#aliyunUserName').val(), 'groupId': $("#authGroup").val(), 'clusterId':$("#clusterId").val()}
+			,
+			success:function(json){
+				if(json.success == true) {
+                    $("#group-modal").modal('hide');
+                    $.toast({
+                        text : "授权成功！",
+                        position : 'top-right',
+                        bgColor : 'green',
+                        textColor : '#eee',
+                    });
+					location.href=urlRefresh;
+				} else {
+//                    $("#group-modal").modal('hide');
+                    $.toast({
+                        text : "授权失败!原因:" + json.errMsg,
+                        position : 'top-right',
+                        bgColor : 'red',
+                        textColor : '#eee',
+                    });
+				}
+			}
+			,
+			error:function(xhr, status, error){
+                $.toast({
+                    text : "授权失败, 请重试!",
+                    position : 'top-right',
+                    bgColor : 'red',
+                    textColor : '#eee',
+                });
+				alert("授权失败, 请重试!");
+			}
+		});
+	}
+
+    function trim(str){
+    　　 return str.replace(/(^\s*)|(\s*$)/g, "");
+　　 }
+
+function deleteAuth(id) {
+
+	if(! confirm('确定取消授权吗？')) {
+		return ;
+	}
+	
+	var urlRefresh = 'jobAuth.htm?clusterId=$!clusterId';
+	
+	var path = "jobManager.do?action=JobAuthAction&event_submit_do_delete_auth=1";
+	jQuery.ajax({
+			url: path,
+			type: "POST",
+			dataType:'json',
+			data:{
+				'id': id
+			}
+			,
+			success:function(json){
+				location.href=urlRefresh;
+			}
+			,
+			error:function(xhr, status, error){
+                $.toast({
+                    text : "取消授权失败, 请重试!",
+                    position : 'top-right',
+                    bgColor : 'red',
+                    textColor : '#eee',
+                });
+				alert("取消授权失败, 请重试!");
+			}
+		});
+}
+
+</script>

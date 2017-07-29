@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="FlowInstance">
+	
+	<typeAlias alias="flowInstance" type="com.le.dts.common.domain.store.FlowInstance" />
+	
+	<resultMap id="flowInstanceResultMap" class="flowInstance">
+		<result property="id" 					column="id"/>
+		<result property="gmtCreate" 			column="gmt_create"/>
+		<result property="gmtModified" 			column="gmt_modified"/>
+		<result property="flowInstanceId" 		column="flow_instance_id"/>
+		<result property="operationObjectId" 	column="operation_object_id"/>
+		<result property="status" 				column="status"/>
+		<result property="operatorId" 			column="operator_id"/>
+	</resultMap>
+	
+	<sql id="flowInstanceColumns">
+		id, 
+		gmt_create, 
+		gmt_modified, 
+    	flow_instance_id, 
+    	operation_object_id, 
+		status,
+		operator_id
+    </sql>
+	
+	<insert id="insert">
+		insert 
+			into 
+		dts_flow_instance(
+			gmt_create, 
+			gmt_modified, 
+	    	flow_instance_id, 
+	    	operation_object_id, 
+			status,
+			operator_id
+		) values (
+			NOW(), 
+			NOW(), 
+			#flowInstanceId#, 
+			#operationObjectId#, 
+			#status#,
+			#operatorId#
+		)
+		<selectKey resultClass="long" keyProperty="id">    
+			<![CDATA[SELECT LAST_INSERT_ID() AS ID ]]>  
+		</selectKey>    
+	</insert>
+	
+	<select id="query" resultMap="flowInstanceResultMap">
+		select 
+			<include refid="flowInstanceColumns" /> 
+		from 
+			dts_flow_instance 
+		where 
+			operator_id = #operatorId# and 
+			operation_object_id = #operationObjectId# 
+		order by id desc 
+		limit 1
+	</select>
+
+	<update id="update">
+		update 
+			dts_flow_instance 
+		set 
+			gmt_modified = now(),
+			status = #status#
+		where 
+			flow_instance_id = #flowInstanceId#
+	</update>
+	
+</sqlMap>

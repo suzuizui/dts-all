@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="JobServerRelation">
+	
+	<typeAlias alias="jobServerRelation" type="com.le.dts.common.domain.store.JobServerRelation" />
+	
+	<resultMap id="jobServerRelationResultMap" class="jobServerRelation">
+		<result property="id" column="id"/>
+		<result property="gmtCreate" column="gmt_create"/>
+		<result property="gmtModified" column="gmt_modified"/>
+		<result property="jobId" column="job_id"/>
+		<result property="server" column="server"/>
+	</resultMap>
+	
+	<sql id="jobServerRelationColumns">
+		id, 
+		gmt_create, 
+		gmt_modified, 
+		job_id, 
+		server
+    </sql>
+	
+	<insert id="insert">
+		insert 
+			into 
+		dts_job_server_relation(
+			gmt_create, 
+			gmt_modified, 
+			job_id, 
+			server
+		) values (
+			NOW(), 
+			NOW(), 
+			#jobId#, 
+			#server#
+		)
+		<selectKey resultClass="long" keyProperty="id">    
+			<![CDATA[SELECT LAST_INSERT_ID() AS ID ]]>  
+		</selectKey>    
+	</insert>
+	
+	<select id="query" resultMap="jobServerRelationResultMap">
+		select 
+			<include refid="jobServerRelationColumns" /> 
+		from 
+			dts_job_server_relation 
+		where 
+			server = #server#
+	</select>
+	
+	<select id="queryByJobId" resultMap="jobServerRelationResultMap">
+		select 
+			<include refid="jobServerRelationColumns" /> 
+		from 
+			dts_job_server_relation 
+		where 
+			job_id = #jobId#
+	</select>
+	
+	<select id="queryBackupServerListJobId" resultClass="java.lang.String">
+		select 
+			server 
+		from 
+			dts_job_server_relation 
+		where 
+			job_id = #jobId#
+	</select>
+
+	<update id="update">
+		update 
+			dts_job_server_relation 
+		set 
+			gmt_modified = now(),
+			server = #server#
+		where 
+			id = #id#
+	</update>
+	
+	<delete id="delete">
+		delete 
+		from 
+			dts_job_server_relation 
+		where 
+			id = #id#
+	</delete>
+	
+</sqlMap>

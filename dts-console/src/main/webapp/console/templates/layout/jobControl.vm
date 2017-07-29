@@ -1,0 +1,30 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">  
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<link href="$cssModule.getURI('/bootstrap.min.css')" rel="stylesheet" />
+		<link href="$cssModule.getURI('/bootstrap-theme.min.css')" rel="stylesheet" />
+		<link href="$cssModule.getURI('/easyui.css')" rel="stylesheet" type="text/css" />
+        <link href="$cssModule.getURI('/jquery.toast.css')" rel="stylesheet" type="text/css" />
+        <link rel="shortcut icon" href="http://www.aliyun.com/favicon.ico" type="image/x-icon" />
+		
+        <script type="text/javascript" src="$jsModule.getURI('/jquery.min.js')"></script>
+		<script type="text/javascript" src="$jsModule.getURI('/bootstrap.min.js')"></script>
+		<script type='text/javascript' src='$jsModule.getURI("/bootstrap-modal.js")'></script>
+		<script type='text/javascript' src='$jsModule.getURI("/jquery.easyui.min.js")'></script>
+        <script type='text/javascript' src="$jsModule.getURI('/jquery.toast.js')"></script>
+
+        <link rel="stylesheet" type="text/css" href="http://g.tbcdn.cn/aliyun/console/1.2.15/styles/select2.css">
+        <link rel="stylesheet" href="http://g.tbcdn.cn/aliyun/console/1.2.12/styles/topbar-jquery.css" />
+        <link rel="stylesheet" type="text/css" href="http://g.tbcdn.cn/aliyun/console/1.2.15/styles/bootstrap/bootstrap.css">
+        <link rel="stylesheet" type="text/css" href="http://g.tbcdn.cn/aliyun/console/1.2.15/styles/console.css">
+        <link rel="stylesheet" type="text/css" href="http://g.tbcdn.cn/aliyun/ecs/1.7.5/styles/console.new.css">
+        <link rel="stylesheet" href="http://g.tbcdn.cn/aliyun/console/1.2.12/styles/topbar-jquery.css" />
+    </head>
+    <body style="padding-top: 60px;">
+		##<div id="header">$control.setTemplate("header.vm")</div>
+        <div id="content">  
+            <div id="main">$screen_placeholder</div>  
+        </div>  
+    </body>  
+</html>  

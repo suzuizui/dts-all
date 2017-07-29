@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="Cluster">
+	
+	<typeAlias alias="cluster" type="com.le.dts.common.domain.store.Cluster" />
+	
+	<resultMap id="clusterResultMap" class="cluster">
+		<result property="id" column="id"/>
+		<result property="gmtCreate" column="gmt_create"/>
+		<result property="gmtModified" column="gmt_modified"/>
+		<result property="description" column="description"/>
+		<result property="jobBackupAmount" column="job_backup_amount"/>
+	</resultMap>
+	
+	<sql id="clusterColumns">
+		id, 
+		gmt_create, 
+		gmt_modified, 
+		description,
+		job_backup_amount
+    </sql>
+	
+	<insert id="insert">
+		insert 
+			into 
+		dts_cluster(
+			gmt_create, 
+			gmt_modified, 
+			description,
+			job_backup_amount
+		) values (
+			NOW(), 
+			NOW(), 
+			#description#,
+			#jobBackupAmount#
+		)
+		<selectKey resultClass="long" keyProperty="id">    
+			<![CDATA[SELECT LAST_INSERT_ID() AS ID ]]>  
+		</selectKey>    
+	</insert>
+	
+	<select id="query" resultMap="clusterResultMap">
+		select 
+			<include refid="clusterColumns" /> 
+		from 
+			dts_cluster
+	</select>
+	
+	<select id="queryById" resultMap="clusterResultMap">
+		select 
+			<include refid="clusterColumns" /> 
+		from 
+			dts_cluster 
+		where 
+			id = #id#
+	</select>
+	
+	<select id="queryAll" resultMap="clusterResultMap">
+		select 
+			<include refid="clusterColumns" /> 
+		from 
+			dts_cluster
+	</select>
+	
+	<update id="update">
+		update 
+			dts_cluster 
+		set 
+			gmt_modified = now(),
+			description = #description#
+		where 
+			id = #id#
+	</update>
+	
+	<delete id="delete">
+		delete 
+		from 
+			dts_cluster 
+		where 
+			id = #id#
+	</delete>
+	
+</sqlMap>

@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="TaskSnapshot">
+	
+	<typeAlias alias="taskSnapshot" type="com.le.dts.common.domain.store.TaskSnapshot" />
+	
+	<resultMap id="taskSnapshotResultMap" class="taskSnapshot">
+		<result property="id" column="id"/>
+		<result property="gmtCreate" column="gmt_create"/>
+		<result property="gmtModified" column="gmt_modified"/>
+		<result property="jobInstanceId" column="job_instance_id"/>
+		<result property="jobProcessor" column="job_processor"/>
+		<result property="body" column="body"/>
+		<result property="status" column="status"/>
+		<result property="clientId" column="client_id"/>
+		<result property="taskName" column="task_name"/>
+		<result property="retryCount" column="retry_count"/>
+	</resultMap>
+	
+	<sql id="taskSnapshotColumns">
+		id, 
+		gmt_create, 
+		gmt_modified, 
+		job_instance_id,
+		job_processor,
+		body,
+		status,
+		client_id,
+		task_name,
+		retry_count
+    </sql>
+	
+	<insert id="insert">
+		insert 
+			into 
+		dts_task_snapshot_$tableIndex$(
+			gmt_create, 
+			gmt_modified, 
+			job_instance_id,
+			job_processor,
+			body,
+			status,
+			client_id,
+			task_name,
+			retry_count
+		) values (
+			NOW(), 
+			NOW(), 
+			#jobInstanceId#,
+			#jobProcessor#,
+			#body#,
+			#taskName#
+			#status#,
+			#clientId#,
+			#retryCount#
+		)
+		<selectKey resultClass="long" keyProperty="id">    
+			<![CDATA[SELECT LAST_INSERT_ID() AS ID ]]>  
+		</selectKey>    
+	</insert>
+	
+	<select id="query" resultMap="taskSnapshotResultMap">
+		select 
+			<include refid="taskSnapshotColumns" /> 
+		from 
+			dts_task_snapshot_$tableIndex$  force index(instanceid_status)
+		where 
+			job_instance_id = #jobInstanceId# and
+			status = #status#
+	</select>
+	
+	<select id="query4Cleanup" resultMap="taskSnapshotResultMap">
+		select 
+			<include refid="taskSnapshotColumns" /> 
+		from 
+			dts_task_snapshot_$tableIndex$  force index(j_r)
+		where 
+			job_instance_id = #jobInstanceId# and
+			retry_count = 0 
+			limit 1000
+	</select>
+	
+	<select id="queryCount4Cleanup" resultClass="long">
+		select 
+			count(1) 
+		from 
+			dts_task_snapshot_$tableIndex$  force index(j_r)
+		where 
+			job_instance_id = #jobInstanceId# and 
+			<![CDATA[retry_count > 0]]>
+	</select>
+	
+	<select id="queryTotalCount" resultClass="long">
+		select 
+			count(1)
+		from 
+			dts_task_snapshot_$tableIndex$ force index(idx_job_instance_id)
+		where
+			job_instance_id = #jobInstanceId#
+	</select>
+	
+	<select id="queryInitCount" resultClass="long">
+		select 
+			count(1)
+		from 
+			dts_task_snapshot_$tableIndex$  force index(instanceid_status)
+		where
+			job_instance_id = #jobInstanceId# and
+			status = 0
+	</select>
+	
+	<select id="queryQueueCount" resultClass="long">
+		select 
+			count(1)
+		from 
+			dts_task_snapshot_$tableIndex$  force index(instanceid_status)
+		where
+			job_instance_id = #jobInstanceId# and
+			status = 1
+	</select>
+	
+	<select id="queryStartCount" resultClass="long">
+		select 
+			count(1)
+		from 
+			dts_task_snapshot_$tableIndex$  force index(instanceid_status)
+		where
+			job_instance_id = #jobInstanceId# and
+			status = 2
+	</select>
+	
+	<select id="querySuccessCount" resultClass="long">
+		select 
+			count(1)
+		from 
+			dts_task_snapshot_$tableIndex$  force index(instanceid_status)
+		where
+		job_instance_id = #jobInstanceId# and
+			status = 3
+	</select>
+	
+	<select id="queryFailureCount" resultClass="long">
+		select 
+			count(1)
+		from 
+			dts_task_snapshot_$tableIndex$  force index(instanceid_status)
+		where
+		job_instance_id = #jobInstanceId# and
+			status = 4
+	</select>
+	
+	<select id="queryFoundFailureCount" resultClass="long">
+		select 
+			count(1)
+		from 
+			dts_task_snapshot_$tableIndex$  force index(instanceid_status)
+		where
+		job_instance_id = #jobInstanceId# and
+			status = 5
+	</select>
+	
+	<select id="queryLayerTotalCount" resultClass="long">
+		select 
+			count(1)
+		from 
+			dts_task_snapshot_$tableIndex$  force index(job_instance_id_task_name_status)
+		where
+		job_instance_id = #jobInstanceId# and
+			task_name = #taskName#
+	</select>
+	
+	<select id="queryLayer" resultClass="String">
+		select 
+			distinct task_name
+		from 
+			dts_task_snapshot_$tableIndex$  force index(idx_job_instance_id)
+		where
+			job_instance_id = #jobInstanceId#
+	</select>
+	
+	<select id="queryLayerInitCount" resultClass="long">
+		select 
+			count(1)
+		from 
+			dts_task_snapshot_$tableIndex$  force index(job_instance_id_task_name_status)
+		where
+		job_instance_id = #jobInstanceId# and
+			task_name = #taskName# and
+			status = 0
+	</select>
+	
+	<select id="queryLayerQueueCount" resultClass="long">
+		select 
+			count(1)
+		from 
+			dts_task_snapshot_$tableIndex$  force index(job_instance_id_task_name_status)
+		where
+		job_instance_id = #jobInstanceId# and
+			task_name = #taskName# and
+			status = 1
+	</select>
+	
+	<select id="queryLayerStartCount" resultClass="long">
+		select 
+			count(1)
+		from 
+			dts_task_snapshot_$tableIndex$  force index(job_instance_id_task_name_status)
+		where
+		job_instance_id = #jobInstanceId# and
+			task_name = #taskName# and
+			status = 2
+	</select>
+	
+	<select id="queryLayerSuccessCount" resultClass="long">
+		select 
+			count(1)
+		from 
+			dts_task_snapshot_$tableIndex$  force index(job_instance_id_task_name_status)
+		where
+			job_instance_id = #jobInstanceId# and
+			task_name = #taskName# and
+			status = 3
+	</select>
+	
+	<select id="queryLayerFailureCount" resultClass="long">
+		select 
+			count(1)
+		from 
+			dts_task_snapshot_$tableIndex$  force index(job_instance_id_task_name_status)
+		where
+			job_instance_id = #jobInstanceId# and
+			task_name = #taskName# and
+			status = 4
+	</select>
+	
+	<select id="queryLayerFoundFailureCount" resultClass="long">
+		select 
+			count(1)
+		from 
+			dts_task_snapshot_$tableIndex$  force index(job_instance_id_task_name_status)
+		where
+			job_instance_id = #jobInstanceId# and
+			task_name = #taskName# and
+			status = 5
+	</select>
+	
+	<select id="queryIdList" resultClass="long">
+		select 
+			id 
+		from 
+			dts_task_snapshot_$tableIndex$  force index(idx_job_instance_id)
+		where
+			job_instance_id = #jobInstanceId# 
+		limit 1000
+	</select>
+	
+	<select id="queryTaskSnapshotList" resultMap="taskSnapshotResultMap">
+		select 
+			<include refid="taskSnapshotColumns" />  
+		from 
+			dts_task_snapshot_$tableIndex$  force index(idx_job_instance_id)
+		where
+			job_instance_id = #jobInstanceId# 
+		limit 1000
+	</select>
+	
+	<select id="queryIdListByRetryCount" resultClass="long">
+		select 
+			id 
+		from 
+			dts_task_snapshot_$tableIndex$  force index(j_r)
+		where 
+		job_instance_id = #jobInstanceId# and 
+		retry_count = 0 
+		limit 1000
+	</select>
+	
+	<select id="queryTaskSnapshotListByRetryCount" resultMap="taskSnapshotResultMap">
+		select 
+			<include refid="taskSnapshotColumns" /> 
+		from 
+			dts_task_snapshot_$tableIndex$  force index(j_r)
+		where 
+			job_instance_id = #jobInstanceId# and 
+			retry_count = 0 
+		limit 1000
+	</select>
+	
+	<select id="aquireTaskList" resultMap="taskSnapshotResultMap">
+		select
+			<include refid="taskSnapshotColumns" /> 
+		from 
+			dts_task_snapshot_$tableIndex$  force index(idx_job_instance_id)
+		where 
+			job_instance_id = #jobInstanceId# and 
+			id > #id# 
+		order by id asc 
+		limit 1000 
+	</select>
+	
+	<select id="queryTotalTableCount" resultClass="long">
+		select 
+			count(1) 
+		from 
+			dts_task_snapshot_$tableIndex$
+	</select>
+	
+	<update id="update">
+		update 
+			dts_task_snapshot_$tableIndex$
+		set 
+			gmt_modified = now(),
+			status = #status#,
+			client_id = #clientId#
+		where 
+			id = #id#
+	</update>
+	
+	<delete id="delete">
+		delete 
+		from 
+			dts_task_snapshot_$tableIndex$
+		where 
+			job_instance_id = #jobInstanceId# and 
+			id = #id#
+	</delete>
+	
+	<delete id="delete4InstanceByIdList">
+		delete 
+		from 
+			dts_task_snapshot_$tableIndex$
+		where 
+			job_instance_id = #jobInstanceId# and 
+			id in 
+            <iterate property="idList" conjunction="," close=")" open="(">  
+                #idList[]# 
+            </iterate>
+	</delete>
+	
+</sqlMap>

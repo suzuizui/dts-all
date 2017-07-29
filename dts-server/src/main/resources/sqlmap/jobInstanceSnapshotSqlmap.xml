@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="JobInstanceSnapshot">
+	
+	<typeAlias alias="jobInstanceSnapshot" type="com.le.dts.common.domain.store.JobInstanceSnapshot" />
+	
+	<resultMap id="jobInstanceSnapshotResultMap" class="jobInstanceSnapshot">
+		<result property="id" column="id"/>
+		<result property="gmtCreate" column="gmt_create"/>
+		<result property="gmtModified" column="gmt_modified"/>
+		<result property="jobId" column="job_id"/>
+		<result property="fireTime" column="fire_time"/>
+		<result property="status" column="status"/>
+		<result property="description" column="description"/>
+		<result property="jobInstanceResult" column="job_instance_result"/>
+		<result property="instanceGlobal" column="instance_global"/>
+		<result property="offset" column="offset"/>
+		<result property="lockVersion" column="lock_version"/>
+		<result property="retryCount" column="retry_count"/>
+		<result property="nextRetryTime" column="next_retry_time"/>
+		<result property="notifyVersion" column="notify_version"/>
+        <result property="relationTag" column="relation_tag" />
+        <result property="isLocked" column="locked" />
+        <result property="gmtLocked" column="gmt_locked" />
+	</resultMap>
+	
+	<sql id="jobInstanceSnapshotColumns">
+		id, 
+		gmt_create, 
+		gmt_modified, 
+		job_id, 
+		fire_time,
+		status,
+		description,
+		job_instance_result,
+		instance_global,
+        offset,
+        lock_version,
+        retry_count,
+        next_retry_time,
+        notify_version,
+        relation_tag,
+        result_version,
+        locked,
+        gmt_locked
+    </sql>
+	
+	<insert id="insert">
+		insert 
+			into 
+		dts_job_instance_snapshot(
+			gmt_create, 
+			gmt_modified, 
+			job_id, 
+			fire_time,
+			status,
+			description,
+			job_instance_result,
+			instance_global,
+			offset,
+			lock_version,
+			retry_count,
+        	next_retry_time,
+        	notify_version,
+            relation_tag,
+            result_version,
+            locked,
+            gmt_locked
+		) values (
+			NOW(), 
+			NOW(), 
+			#jobId#, 
+			#fireTime#,
+			#status#,
+			#description#,
+			#jobInstanceResult#,
+			#instanceGlobal#,
+			#offset#,
+			#lockVersion#,
+			#retryCount#,
+			#nextRetryTime#,
+			#notifyVersion#,
+            #relationTag#,
+            #resultVersion#,
+            #isLocked#,
+            #gmtLocked#
+		)
+		<selectKey resultClass="long" keyProperty="id">    
+			<![CDATA[SELECT LAST_INSERT_ID() AS ID ]]>  
+		</selectKey>    
+	</insert>
+
+	<select id="get" resultMap="jobInstanceSnapshotResultMap">
+		select 
+			<include refid="jobInstanceSnapshotColumns" /> 
+		from 
+			dts_job_instance_snapshot 
+		where 
+            id = #id#
+	</select>
+	
+	<select id="queryNewestInstance" resultMap="jobInstanceSnapshotResultMap">
+		select 
+			<include refid="jobInstanceSnapshotColumns" /> 
+		from 
+			dts_job_instance_snapshot force index(j)
+		where 
+            job_id = #jobId# 
+        order by id desc 
+        limit 1
+	</select>
+    
+	<select id="query" resultMap="jobInstanceSnapshotResultMap">
+		select 
+			<include refid="jobInstanceSnapshotColumns" /> 
+		from 
+			dts_job_instance_snapshot 
+		where 
+			id = #id#
+	</select>
+
+	<select id="findByJobIdAndFireTime" resultMap="jobInstanceSnapshotResultMap">
+		select 
+			<include refid="jobInstanceSnapshotColumns" /> 
+		from 
+			dts_job_instance_snapshot force index(uniqueinstance) 
+		where 
+			job_id = #jobId# and 
+            fire_time = #fireTime#
+	</select>
+	
+	<select id="queryWorking" resultMap="jobInstanceSnapshotResultMap">
+		select 
+			<include refid="jobInstanceSnapshotColumns" /> 
+		from 
+			dts_job_instance_snapshot force index(j_s) 
+		where 
+			job_id = #jobId# and 
+			(status = 1 or status = 2)
+	</select>
+	
+	<select id="queryWorkingJobInstanceAmount" resultClass="long">
+		select 
+			count(1) 
+		from 
+			dts_job_instance_snapshot force index(j_s) 
+		where 
+			job_id = #jobId# and 
+			(status = 1 or status = 2)
+	</select>
+	
+	<select id="queryInstanceGlobal" resultMap="jobInstanceSnapshotResultMap">
+		select 
+			<include refid="jobInstanceSnapshotColumns" /> 
+		from 
+			dts_job_instance_snapshot 
+		where 
+			id = #id#
+	</select>
+	
+	<select id="queryRetryCount" resultClass="long">
+		SELECT 
+			count(1) 
+		from 
+			dts_job_instance_snapshot 
+		where 
+			<![CDATA[next_retry_time <= now()]]> and 
+			status in 
+            <iterate property="statusList" conjunction="," close=")" open="(">  
+                #statusList[]#  
+            </iterate>
+	</select>
+	
+	<select id="queryRetryInstanceList" resultMap="jobInstanceSnapshotResultMap">
+		SELECT 
+			<include refid="jobInstanceSnapshotColumns" /> 
+		from 
+			dts_job_instance_snapshot 
+		where 
+			<![CDATA[next_retry_time <= now()]]> and 
+			status in 
+            <iterate property="statusList" conjunction="," close=")" open="(">  
+                #statusList[]#  
+            </iterate> 
+            ORDER BY id ASC 
+			limit #offset#, #length#
+	</select>
+	
+	<select id="queryInstanceListPaging" resultMap="jobInstanceSnapshotResultMap">
+		SELECT 
+			<include refid="jobInstanceSnapshotColumns" /> 
+		from 
+			dts_job_instance_snapshot force index(j) 
+		where 
+			job_id = #jobId# and 
+			id > #lastId# 
+        ORDER BY 
+        	id ASC 
+		limit 1000
+	</select>
+
+	<update id="updateOffsetWithLock">
+		update 
+			dts_job_instance_snapshot 
+		set 
+			gmt_modified = now(),
+            offset = #offset#,
+            lock_version = #lockVersion#
+		where 
+			id = #id# and
+            lock_version = #originalLockVersion#
+	</update>
+
+	<update id="setLockedWithCondition">
+		update 
+			dts_job_instance_snapshot 
+		set 
+			gmt_modified = now(),
+            gmt_locked = now(),
+            locked = true 
+		where 
+			id = #id# and 
+			offset = #offset# and 
+            (locked = false or <![CDATA[gmt_locked < #gmtLocked#]]>)
+	</update>
+    
+	<update id="update">
+		update 
+			dts_job_instance_snapshot 
+		set 
+			gmt_modified = now(),
+			status = #status#
+			<isNotNull property="description" prepend=",">
+				description = #description#
+			</isNotNull>
+		where 
+			id = #id#
+	</update>
+	
+	<update id="updateLockAndOffset">
+		update 
+			dts_job_instance_snapshot 
+		<dynamic prepend="set"> 
+			<isNotEqual  property="offset" compareValue="0">
+				offset = #offset#,
+			</isNotEqual>
+			gmt_modified = now(),
+			locked = #isLocked#
+		</dynamic>
+		where 
+			id = #id#
+	</update>
+	
+	<update id="updateInitInstance">
+		update 
+			dts_job_instance_snapshot 
+		set 
+			gmt_modified = now(),
+			status = #status# 
+		where 
+			id = #id# and 
+			<![CDATA[status <= 1]]>
+	</update>
+	
+	<update id="updateInstanceGlobal">
+		update 
+			dts_job_instance_snapshot 
+		set 
+			gmt_modified = now(),
+			instance_global = #instanceGlobal#
+		where 
+			id = #id#
+	</update>
+	
+	<update id="updateJobInstanceResult">
+		update 
+			dts_job_instance_snapshot 
+		set 
+			gmt_modified = now(),
+			job_instance_result = #jobInstanceResult#,
+			result_version = result_version + 1 
+		where 
+			id = #id# and 
+			result_version = retry_count
+	</update>
+	
+	<update id="updateInstanceStatus">
+		update 
+			dts_job_instance_snapshot 
+		set 
+			gmt_modified = now(),
+			status = #status#
+		where 
+			id = #id#
+	</update>
+	
+	<update id="updateFailureInstanceStatus">
+		update 
+			dts_job_instance_snapshot force index(uniqueinstance) 
+		set 
+			gmt_modified = now(),
+			status = #status# 
+		where 
+			job_id = #jobId# and 
+            fire_time = #fireTime#
+	</update>
+	
+	<update id="updateInstanceLock">
+		update 
+			dts_job_instance_snapshot 
+		set 
+			gmt_modified = now(),
+			offset = 0,
+            lock_version = 0 
+		where 
+			id = #id#
+	</update>
+	
+	<update id="updateNotifyVersion">
+		update 
+			dts_job_instance_snapshot 
+		set 
+			gmt_modified = now(),
+            notify_version = notify_version + 1 
+		where 
+			id = #id# and 
+			notify_version = #notifyVersion#
+	</update>
+
+    <update id="updateRelationTag">
+        update 
+        	dts_job_instance_snapshot 
+        set 
+	        gmt_modified = now(),
+	        relation_tag = #afterJobId# 
+        where 
+	        id = #id# and 
+	        relation_tag = #lastJobId#
+    </update>
+    
+    <update id="updateHandleUnfinishVersion">
+		update 
+			dts_job_instance_snapshot 
+		set 
+			gmt_modified = now(),
+            handle_unfinish_version = 1 
+		where 
+			id = #id# and 
+			handle_unfinish_version = 0
+	</update>
+	
+	<delete id="delete">
+		delete 
+		from 
+			dts_job_instance_snapshot 
+		where 
+			id = #id#
+	</delete>
+	
+</sqlMap>

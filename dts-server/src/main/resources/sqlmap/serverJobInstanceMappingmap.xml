@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="ServerJobInstanceMapping">
+	
+	<typeAlias alias="serverJobInstanceMapping" type="com.le.dts.common.domain.store.ServerJobInstanceMapping" />
+	
+	<resultMap id="serverJobInstanceMappingResultMap" class="serverJobInstanceMapping">
+		<result property="id" column="id"/>
+		<result property="gmtCreate" column="gmt_create"/>
+		<result property="gmtModified" column="gmt_modified"/>
+		<result property="server" column="server"/>
+		<result property="jobInstanceInfo" column="job_instance_info"/>
+		<result property="jobInstanceId" column="job_instance_id"/>
+		<result property="jobId" column="job_id"/>
+		<result property="jobType" column="job_type"/>
+		<result property="groupId" column="group_id"/>
+		<result property="compensation" column="compensation"/>
+		<result property="clientId" column="client_id"/>
+	</resultMap>
+	
+	<sql id="serverJobInstanceMappingColumns">
+		id, 
+		gmt_create, 
+		gmt_modified, 
+        server,
+		job_instance_info,
+		job_instance_id,
+		job_id,
+		job_type,
+		group_id,
+		compensation,
+		client_id
+    </sql>
+	
+	<insert id="insert">
+		insert 
+			into 
+		dts_server_job_instance_mapping (
+			gmt_create, 
+			gmt_modified, 
+            server,
+            job_instance_info,
+            job_instance_id,
+			job_id,
+			job_type,
+			group_id,
+			compensation,
+			client_id
+		) values (
+			NOW(), 
+			NOW(), 
+			#server#, 
+			#jobInstanceInfo#,
+			#jobInstanceId#,
+			#jobId#,
+			#jobType#,
+			#groupId#,
+			#compensation#,
+			#clientId#
+		)
+		<selectKey resultClass="long" keyProperty="id">    
+			<![CDATA[SELECT LAST_INSERT_ID() AS ID ]]>  
+		</selectKey>    
+	</insert>
+	
+	<select id="findByServer" resultMap="serverJobInstanceMappingResultMap">
+		select 
+			<include refid="serverJobInstanceMappingColumns" /> 
+		from 
+			dts_server_job_instance_mapping
+		where 
+			server = #server#
+	</select>
+	
+	<select id="loadByServer" resultMap="serverJobInstanceMappingResultMap">
+		select 
+			<include refid="serverJobInstanceMappingColumns" /> 
+		from 
+			dts_server_job_instance_mapping 
+		where 
+			server = #server# and 
+			id > #id# 
+		order by id asc 
+		limit 1000
+	</select>
+
+	<update id="update">
+		update 
+			dts_server_job_instance_mapping
+		set 
+			gmt_modified = now(),
+			server = #server#,
+			job_instance_info = #jobInstanceInfo#
+		where 
+			id = #id#
+	</update>
+	
+	<update id="delete">
+		delete 
+		from  
+			dts_server_job_instance_mapping 
+		where 
+			server = #server# and 
+			job_instance_id = #jobInstanceId#
+	</update>
+	
+</sqlMap>

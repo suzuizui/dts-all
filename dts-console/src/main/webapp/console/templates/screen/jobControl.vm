@@ -1,0 +1,435 @@
+<input type="hidden" id="clusterId" value="$clusterId" />
+<input type="hidden" id="outerUser" value="$outerUser" />
+<input type="hidden" id="defaultGroup" value="$!defaultGroup">
+	<div class="navbar navbar-default navbar-fixed-top" role="navigation" style="background:#FFFFFF">
+	<div class="container-fluid">
+		<div class="row">
+			<div class="navbar-header">
+				<a class="navbar-brand" href="#" style='color:#FF9933;font-weight:500'>&nbsp;&nbsp;分布式定时服务DTS</a>
+			</div>
+			<div class="navbar-collapse collapse">
+				<ul class="nav navbar-nav">
+					<li >
+						<a href="jobManager.htm" style='color:#000000;weight:600'>Job配置</a>
+					</li>
+					<li class="active">
+						<a href="jobControl.htm" style="color:#FFFFFF;background:#555555">Job管控</a>
+					</li>
+					#if($!showAuth)
+					<li >
+						<a href="jobAuth.htm" style='color:#000000;weight:600'>权限控制</a>
+					</li>
+					#end
+					#if($!showAdvertisement)
+					<li >
+						<a href="$!{timerMsgDomainName}tmq-console/" target="_blank" style='color:#000000;weight:600'>TMQ</a>
+					</li>
+					<li >
+						<a href="http://gitlab.alibaba-inc.com/middleware-dts/tmq-wiki/wikis/home" target="_blank" style='color:#000000;weight:600'>定时消息wiki</a>
+					</li>
+					#end
+				</ul>
+				<div class="pull-right" style="padding-right:50px">
+					<table >
+						<tr height="50">
+							<td >
+								<span style="color:#000000">欢迎&nbsp;$!userName</span>
+                            </td>
+                        </tr>
+                    </table>
+    			</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="container-fluid">
+	<div class="col-sm-3 col-md-2">
+		<div class="list-group">
+			<a href="jobControl.htm?clusterId=$!clusterId" class="list-group-item active" style="background:#555555">状态监管</a>
+			<a href="jobHistoryRecord.htm?clusterId=$!clusterId" class="list-group-item">历史记录</a>
+		</div>
+	</div>
+	<div class="col-sm-9 col-md-10">
+		<div class="row">
+			<h4 class="header">分组管理</h4>
+		</div>
+		<div class="row">
+			<div>
+				#foreach($cluster in $userServerCluster.entrySet())
+					#if($!cluster.getValue().getId() == $!clusterId)
+                        <button id="reginId_all_btn" type="button" class="btn btn-info" onclick="showGroupCluster('$!cluster.getValue().getId()')">
+							$!cluster.getValue().getDescription()
+                        </button>
+					#else
+                        <button id="reginId_all_btn" type="button" class="btn btn-default" onclick="showGroupCluster('$!cluster.getValue().getId()')">
+							$!cluster.getValue().getDescription()
+                        </button>
+					#end
+				#end
+			</div>
+		</div>
+		<br>
+		<div>
+			<table class="table table-bordered">
+				#foreach($group in $userGroups)
+					<tr>
+						<td>
+							<table class="table table-bordered">
+								<tr>
+									<td>
+										分组ID:$group.getSystemDefineGroupId()
+									</td>
+									<td>
+										分组描述:$group.getGroupDesc()
+									</td>
+									<td>
+										Job数:$group.getGroupJobNum()
+									</td>
+								</tr>
+								<tr>
+									<td colspan="3">
+										<button id="viewJobStatus_$group.getSystemDefineGroupId()" type="button" class="btn btn-default pull-right" onclick="showJobStatus('$!group.getSystemDefineGroupId()')">
+										查看Job状态
+										</button>
+									</td>
+								</tr>
+							</table>
+							<div id="group_$group.getSystemDefineGroupId()" style="display:none;" >
+							</div>
+						</td>
+					</tr>
+				#end
+			</table>
+		</div>
+	</div>
+</div>
+
+<div id="job-modal" class="modal fade" role="dialog">
+	<div class="modal-dialog">
+        <div class="modal-content">
+    		<div class="modal-header">
+    			<a class="close" data-dismiss="modal">×</a>
+    			<h4 class="modal-title">Job实例执行进度</h4>
+            </div>
+            <div class="modal-body">
+				<div id="job-status">
+				</div>
+          	</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" onclick="" data-dismiss="modal">确定</button>
+            </div>
+        </div>
+	</div>
+</div>
+
+<script language="javascript">
+
+    function firstGroupShow() {
+        var defaultGroup = $("#defaultGroup").val();
+        if(defaultGroup != "") {
+            showJobStatus(defaultGroup);
+        }
+    }
+
+    window.onload = firstGroupShow;
+
+	function showGroupCluster(clusterId){
+		var path = "jobControl.htm?clusterId=" + clusterId;
+		location.href = path;
+	}
+	function showJobStatus(groupId){
+		if($("#group_" + groupId).is(':hidden') == true){
+
+			var pageCount = 0;
+			var path = "jobManager.do?action=JobManageAction&event_submit_do_get_group_jobs_count=1";
+			jQuery.ajax({
+				url: path,
+				type: "POST",
+				dataType:'json',
+				data:{'groupId': groupId, 'clusterId':$("#clusterId").val()}
+				,
+				success:function(json){
+					if(json.success == true){
+						pageCount = json.pageCount;
+						var jt = "";
+						jt += "<div><table id=table_" + groupId + " class='table'><thead><td align='center' width='100'>Job ID</td><td>Job描述</td><td align='center' width='120'>Job状态</td><td align='center' width='200'>Job触发时间</td><td align='center' width='200' colspan='2'>Job执行进度</td><td align='center' width='150'>操作</td></thead>"
+						jt += "</table>";
+						jt += "<div id='jobPagination_" + groupId + "' class='easyui-pagination pull-right'></div></div>";
+						$("#group_" + groupId).html(jt);
+						// 绑定分页
+						$("#jobPagination_" + groupId).pagination({
+							total:pageCount,
+							pageSize:10,
+							pageList:[5,10,20],
+							displayMsg:"",
+							beforePageText:"页",
+							afterPageText:"共{pages}",
+							onSelectPage: function(pageNumber, pageSize){groupPagesCallback(groupId, pageNumber, pageSize);},
+                            onRefresh:function(pageNumber, pageSize){groupPagesCallback(groupId, pageNumber, pageSize);},
+						});
+						initGroupJobStatusData(groupId,1,10);
+					}
+					else{
+                        $.toast({
+                            text : "获取失败!" + json.errMsg,
+                            position : 'top-right',
+                            bgColor : 'red',
+                            textColor : '#eee',
+                            hideAfter : false,
+                        });
+					}
+				}
+				,
+				error:function(xhr, status, error){
+                    $.toast({
+                        text : "获取失败!",
+                        position : 'top-right',
+                        bgColor : 'red',
+                        textColor : '#eee',
+                    });
+				}
+			});
+            $("#viewJobStatus_" + groupId).html("收起Job列表");
+		}else{
+			$("#group_" + groupId).hide();
+            $("#viewJobStatus_" + groupId).html("查看Job状态");
+		}
+	}
+
+	function groupPagesCallback(groupId, pageNumber, pageSize){
+		initGroupJobStatusData(groupId, pageNumber, pageSize);
+	}
+
+	function initGroupJobStatusData(groupId, pageId, pageSize){
+		var path = "jobControl.do?action=JobControlAction&event_submit_do_get_group_job_detail=1";
+		jQuery.ajax({
+			url: path,
+			type: "POST",
+			dataType:'json',
+			data:{'groupId': groupId, 'clusterId':$("#clusterId").val(), 'pageSize':pageSize, 'page':pageId}
+			,
+			success:function(json){
+				if(json.success == true){
+					var jobsArray = json.jobsDetail;
+					var tbody = "";
+					$("#table_" + groupId + " tr:gt(0)").remove();
+					for(i = 0; i < jobsArray.length; i++){
+						jobJson = jobsArray[i];
+						var jt = "";
+                        progresses = eval(jobJson.overallProgress);
+                        var spans = progresses.length;
+                        // 不能比1小
+                        if(spans == 0) {
+                            spans = 1;
+                        }
+
+                        jt += "<tr><td align='center' width='100' rowspan='"+spans+"'>" + jobJson.jobId + "</td>";
+						jt += "<td rowspan='" + spans + "'>" + jobJson.jobDesc + "</td>";
+						if(jobJson.isRunning == -1){
+							jt += "<td align='center' width='120' rowspan='"+spans+"'><label id='stats_" + jobJson.jobId + "' class='ng-binding text-danger'>未执行</label></td>";
+						}else if(jobJson.isRunning == 0){
+							jt += "<td align='center' width='120' rowspan='"+spans+"'><label id='stats_" + jobJson.jobId + "' class='ng-binding text-warning'>上次执行结束</label></td>";
+						}else{
+							jt += "<td align='center' width='120' rowspan='"+spans+"'><label id='stats_" + jobJson.jobId + "' class='ng-binding text-success'>进行中</label></td>";
+						}
+
+                        if(progresses.length > 0) {
+                            // 先拼第一行的数据;
+                            jt += "<td align='center' width='200'><div>" + progresses[0].timestamp + "</div></td>";
+							
+							if(progresses[0].showProcess == true) {
+                                jt += "<td align='center' width='100'><div id='instance_" + progresses[0].instanceId + "'><img src='$imageModule.getURI('ajax-loader.gif')'  /></div></td>";
+                                // 异步去获取进度;
+                                loadInstanceProgress("instance_" + progresses[0].instanceId, progresses[0].instanceId);
+                                jt += "<td align='center' width='100'><div style='align: center'><a name='jobdetail' onclick='jobDetailStats("
+                                        + jobJson.jobId +",&quot;" + jobJson.jobDesc + "&quot;," + progresses[0].instanceId + ")' ><span>详情</span></a></div><br></td>";
+							} else {
+								jt += "<td align='center' width='100'></td>";
+                            	jt += "<td align='center' width='100'></td>";
+							}
+                        } else {
+                            jt += "<td align='center' width='200'></td>";
+                            jt += "<td align='center' width='100'></td>";
+                            jt += "<td align='center' width='100'></td>";
+                        }
+                        jt += "<td align='center' width='150' rowspan='"+spans+"'>";
+                        if(jobJson.isRunning == true){
+                            jt += "<a onclick='jobOption(0,&quot;"
+                                    + groupId + "&quot;," + jobJson.jobId + ",this)' >立即停止</a>&nbsp;&nbsp;</td>";
+                        }else{
+                            jt += "<a onclick='jobOption(1,&quot;"
+                                  + groupId + "&quot;," + jobJson.jobId + ",this)' >触发一次</a>&nbsp;&nbsp;</td>";
+                        }
+                        jt += "</tr>";
+
+                        // rowspan的行;
+                        for(var j = 1; j < progresses.length; j++) {
+                            jt += "<tr>"
+                            jt += "<td><div>" + progresses[j].timestamp + "</div></td>";
+                            jt += "<td><div id='instance_" + progresses[j].instanceId + "'><img src='$imageModule.getURI('ajax-loader.gif')'  /></div></td>";
+                            // 异步去获取进度;
+                            loadInstanceProgress("instance_" + progresses[j].instanceId, progresses[j].instanceId);
+                            jt += "<td><div><a name='jobdetail' onclick='jobDetailStats("
+                                    + jobJson.jobId +",&quot;" + jobJson.jobDesc + "&quot;," + progresses[j].instanceId + ")' ><span>详情</span></a></div><br></td>";
+                            jt += "</tr>";
+                        }
+
+						tbody += jt;
+					}
+					$("#table_" + groupId).append(tbody);
+                    $("#group_" + groupId).show();
+				}
+				else{
+                    $.toast({
+                        text : "获取失败!" + json.errMsg,
+                        position : 'top-right',
+                        bgColor : 'red',
+                        textColor : '#eee',
+                        hideAfter : false
+                    });
+				}
+			}
+			,
+			error:function(xhr, status, error){
+                $.toast({
+                    text : "获取失败!",
+                    position : 'top-right',
+                    bgColor : 'red',
+                    textColor : '#eee',
+                });
+			}
+		});
+	}
+
+    function loadInstanceProgress(contentId, instanceId) {
+        var path = "jobControl.do?action=JobControlAction&event_submit_do_get_job_instance_overal_progress=1";
+        jQuery.ajax({
+            url: path,
+            type: "POST",
+            dataType:'json',
+            data:{'instanceId':instanceId},
+            success:function(json) {
+                if (json.success == true) {
+                    $("#" + contentId).html("<div class='progress'><div class='progress-bar progress-bar-success progress-bar-striped' role='progressbar' aria-valuenow='" + json.progress
+                                    + "' aria-valuemin='0' aria-valuemax='100' style='width: " + json.progress + "%;'><font color='black'>"
+                                    + json.progress + "%</font></div></div>");
+                } else {
+                    //
+                    $.toast({
+                        text : "获取Job实例执行进度失败!" + json.errMsg,
+                        position : 'top-right',
+                        bgColor : 'red',
+                        textColor : '#eee',
+                        hideAfter : false
+                    });
+
+                }
+            },
+            error:function(xhr, status, error){
+                //
+            }
+        });
+
+    }
+
+	function jobOption(opt, groupId, jobId, obj){
+		var path = "";
+		if(opt == 1){
+			path = "jobControl.do?action=JobControlAction&event_submit_do_start_job=1";
+		}
+		else
+		if(opt == 0){
+			path = "jobControl.do?action=JobControlAction&event_submit_do_stop_job=1";
+		}
+		jQuery.ajax({
+			url: path,
+			type: "POST",
+			dataType:'json',
+			data:{'jobId': jobId, 'groupId':groupId}
+			,
+			success:function(json){
+                if(json.success == true) {
+                    if(obj.innerHTML == "触发一次"){
+                        obj.innerHTML="立即停止";
+//                        $("#stats_" + jobId).attr("class", "ng-binding text-success");
+//                        $("#stats_" + jobId).text("进行中");
+                    }
+                    else{
+                        obj.innerHTML="触发一次";
+//                        $("#stats_" + jobId).attr("class", "ng-binding text-danger");
+//                        $("#stats_" + jobId).text("未进行");
+                    }
+                } else {
+                    $.toast({
+                        text : "操作失败! " + json.errMsg,
+                        position : 'top-right',
+                        bgColor : 'red',
+                        textColor : '#eee',
+                    });
+                }
+
+			}
+			,
+			error:function(xhr, status, error){
+                $.toast({
+                    text : "操作失败!",
+                    position : 'top-right',
+                    bgColor : 'red',
+                    textColor : '#eee',
+                });
+			}
+		}
+		);
+	}
+	function jobDetailStats(jobId, jobDesc, instanceId){
+
+        $("#job-status").html("<div align='center'><img src='$imageModule.getURI('ajax-loader.gif')' /><br>正在查询...</div>");
+		$("#job-modal").modal();
+		var path = "jobControl.do?action=JobControlAction&event_submit_do_get_job_instance_status=1";
+		jQuery.ajax({
+			url: path,
+			type: "POST",
+			dataType:'json',
+			data:{'jobId': jobId, 'clusterId':$("#clusterId").val(), 'instanceId':instanceId},
+			success:function(json){
+				if(json.success == true){
+					// 生成动态数据
+					var dl = "";
+					dl += "<div><p>Job描述:" + jobDesc + "</p>";
+                    dl += "Job整体进度：<span>包含" + json.overalProcess.totalAmout + "个子任务，已经完成" + json.overalProcess.completeCount + "个</span>" + "<div class='progress'><div class='progress-bar progress-bar-success' role='progressbar' aria-valuenow='" + json.overalProcess.totalProgress
+                            + "' aria-valuemin='0' aria-valuemax='100' style='width: " + json.overalProcess.totalProgress + "%;'><font color='black'>"
+                            + json.overalProcess.totalProgress + "%</font></div></div></p>";
+					var allProgress = eval(json.allStagedProgress);
+					for(i = 0; i < allProgress.length; i++){
+						progress = allProgress[i];
+						dl += progress.layerName + "进度：<span>包含" + progress.totalAmout + "个子任务，已经完成" + progress.completeCount + "个</span><div class='progress'><div class='progress-bar progress-bar-success' role='progressbar' aria-valuenow='" + progress.process
+                                + "' aria-valuemin='0' aria-valuemax='100' style='width: " + progress.process + "%;'><font color='black'>"
+                                + progress.process + "%</font></div></div>";
+						dl += "</p>";
+					}
+					dl += "</p></p>按机器维度统计</p>" + json.machineProgress + "</div>";
+					$("#job-status").html(dl);
+//					$("#job-modal").modal();
+				}else{
+                    $.toast({
+                        text : "获取Job实例执行详情失败! " + json.errMsg,
+                        position : 'top-right',
+                        bgColor : 'red',
+                        textColor : '#eee',
+                        hideAfter : false
+                    });
+				}
+			}
+			,
+			error:function(xhr, status, error){
+                $.toast({
+                    text : "获取失败!",
+                    position : 'top-right',
+                    bgColor : 'red',
+                    textColor : '#eee',
+                });
+			}
+		});
+	}
+</script>

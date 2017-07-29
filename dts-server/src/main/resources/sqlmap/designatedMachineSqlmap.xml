@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//iBATIS.com//DTD SQL Map 2.0//EN" "http://www.ibatis.com/dtd/sql-map-2.dtd">
+<sqlMap namespace="DesignatedMachine">
+	
+	<typeAlias alias="designatedMachine" type="com.le.dts.common.domain.store.DesignatedMachine" />
+	
+	<resultMap id="designatedMachineResultMap" class="designatedMachine">
+		<result property="id" column="id"/>
+		<result property="gmtCreate" column="gmt_create"/>
+		<result property="gmtModified" column="gmt_modified"/>
+		<result property="clientGroupId" column="client_group_id"/>
+		<result property="jobId" column="job_id"/>
+		<result property="machine" column="machine"/>
+		<result property="policy" column="policy"/>
+	</resultMap>
+	
+	<sql id="designatedMachineColumns">
+		id, 
+		gmt_create, 
+		gmt_modified, 
+		client_group_id,
+		job_id,
+		machine,
+		policy
+    </sql>
+	
+	<insert id="insert">
+		insert 
+			into 
+		dts_designated_machine(
+			gmt_create, 
+			gmt_modified, 
+			client_group_id,
+			job_id,
+			machine,
+			policy
+		) values (
+			NOW(), 
+			NOW(), 
+			#clientGroupId#,
+			#jobId#,
+			#machine#,
+			#policy#
+		)
+		<selectKey resultClass="long" keyProperty="id">    
+			<![CDATA[SELECT LAST_INSERT_ID() AS ID ]]>  
+		</selectKey>    
+	</insert>
+	
+	<select id="queryByJobId" resultMap="designatedMachineResultMap">
+		select 
+			<include refid="designatedMachineColumns" /> 
+		from 
+			dts_designated_machine 
+		where 
+			job_id = #jobId#
+	</select>
+	
+	<select id="queryDesignatedMachineListById" resultMap="designatedMachineResultMap">
+		select 
+			<include refid="designatedMachineColumns" /> 
+		from 
+			dts_designated_machine 
+		where 
+			id > #id# 
+		limit 1000
+	</select>
+	
+	<delete id="deleteByJobId">
+		delete 
+		from 
+			dts_designated_machine 
+		where 
+			job_id = #jobId#
+	</delete>
+	
+</sqlMap>
